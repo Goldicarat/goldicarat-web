@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Search, ShoppingBag, User, Heart, Diamond, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, X, Search, ShoppingBag, User, Heart, LogOut, ChevronDown } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
+import { logo } from '../assets/images'
 
 const jewelryCategories = [
   {
@@ -227,7 +228,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-3 sm:py-4">
           <Link to="/" className="flex items-center gap-2">
-            <Diamond className="w-6 h-6 sm:w-8 sm:h-8 text-gold-500" />
+            <img src={logo} alt="Goldicarat" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
             <div>
               <h1 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                 Goldicarat
