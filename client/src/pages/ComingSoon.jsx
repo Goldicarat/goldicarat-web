@@ -22,8 +22,12 @@ export default function ComingSoon() {
                 <div className="flex-grow flex items-center justify-center px-4 py-12">
                     <div className="max-w-4xl mx-auto text-center">
                         <div className="mb-8">
-                            <div className="inline-flex items-center justify-center w-32 h-32 mb-6">
-                                <img src={logo} alt="Goldicarat Logo" className="w-full h-full object-contain" />
+                            <div className="inline-flex items-center justify-center w-32 h-32 mb-6 rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800">
+                                <img
+                                    src={logo}
+                                    alt="Goldicarat Logo"
+                                    className="w-28 h-28 object-contain"
+                                />
                             </div>
                         </div>
 
