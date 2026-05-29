@@ -26,7 +26,7 @@ export default function ComingSoon() {
                                 <img
                                     src={logo}
                                     alt="Goldicarat Logo"
-                                    className="w-28 h-28 object-contain"
+                                    className="object-contain"
                                 />
                             </div>
                         </div>
