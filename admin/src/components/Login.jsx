@@ -35,7 +35,7 @@ const Login = ({ setToken }) => {
                 {/* Logo Section */}
                 <div className="text-center mb-8">
                     <div className="bg-white p-3 rounded-md shadow-lg inline-block mb-4 transform hover:scale-105 transition-transform duration-300 web-lab">
-                        <img src={logo} alt="logo" className="web-lab-img" style={{ width: `125px` }} />
+                        <img src={logo} alt="logo" className="web-lab-img object-contain rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800" style={{ width: `125px` }} />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Panel</h1>
                     <p className="text-gray-600">

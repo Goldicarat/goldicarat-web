@@ -23,7 +23,7 @@ import api from "./api/axiosInstance";
 const showComingSoon = isComingSoon();
 
 function App() {
-    const [comingSoonView, setComingSoonView] = useState(true);
+    const [comingSoonView, setComingSoonView] = useState(false);
 
     const fetchAdminSetting = async () => {
         try {
@@ -31,6 +31,8 @@ function App() {
 
             if (response?.data?.success) {
                 setComingSoonView(response.data.setting.comingSoonMode);
+            } else {
+                setComingSoonView(true);
             };
         } catch (error) {
             console.error("Error fetching categories:", error);

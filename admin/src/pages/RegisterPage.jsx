@@ -85,7 +85,7 @@ const RegisterPage = () => {
                 {/* Logo Section */}
                 <div className="text-center mb-4">
                     <div className="bg-white p-3 rounded-md shadow-lg inline-block  transform hover:scale-105 transition-transform duration-300">
-                        <img src={logo} alt="logo" className="w-20 web-lab-img" style={{ width: `125px` }} />
+                        <img src={logo} alt="logo" className="w-20 web-lab-img object-contain rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800" style={{ width: `125px` }} />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
                         Create Account

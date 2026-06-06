@@ -62,13 +62,13 @@ const Navbar = () => {
                     <img
                         src={logo}
                         alt="logo"
-                        className="w-20 sm:w-24 transition-transform duration-200 group-hover:scale-105"
+                        className="w-20 sm:w-24 transition-transform duration-200 group-hover:scale-105 object-contain rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800"
                     />
                     <div className="hidden sm:block">
-                        <p className="text-xs uppercase font-bold tracking-wide text-blue-600">
+                        <h1 className="text-lg sm:text-xl md:text-2xl uppercase font-bold tracking-wide text-blue-600">
                             Admin Panel
-                        </p>
-                        <p className="text-xs text-gray-500">Manage Your Product</p>
+                        </h1>
+                        <p className="text-xl md:text-2xl text-gray-500">Manage Your Product</p>
                     </div>
                 </Link>
 
