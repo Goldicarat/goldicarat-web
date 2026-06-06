@@ -11,6 +11,10 @@ const settingSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        comingSoonMode: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         minimize: false,

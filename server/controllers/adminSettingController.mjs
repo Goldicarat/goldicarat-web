@@ -38,6 +38,21 @@ const getSettingDetails = async (req, res) => {
     }
 };
 
+const getSingleSettingDetails = async (req, res) => {
+    try {
+        const settingDetails = await settingModel.findOne({});
+
+        if (!settingDetails) {
+            return res.status(400).json({ success: false, message: "Setting Details not found" });
+        };
+
+        return res.status(200).json({ success: true, setting: settingDetails });
+    } catch (error) {
+        console.error("Get Single Setting Details Error", error);
+        return res.status(400).json({ success: false, message: error.message });
+    }
+};
+
 const changePassword = async (req, res) => {
     try {
         const adminId = req.user._id;
@@ -124,9 +139,41 @@ const updateDiscountedPercentage = async (req, res) => {
     };
 };
 
+const updateSetting = async (req, res) => {
+    try {
+        const adminId = req.user._id;
+        const { comingSoonMode } = req.body;
+
+        const adminDetails = await userModel.findById(adminId);
+        if (!adminDetails) {
+            return res.status(400).json({ success: false, message: "Admin details not found" });
+        };
+
+        const updatePayload = {
+            comingSoonMode: comingSoonMode,
+        };
+
+        const settingUpdate = await settingModel.findOneAndUpdate(
+            { adminId: adminDetails._id },
+            { $set: updatePayload },
+            { new: true },
+        );
+        if (!settingUpdate) {
+            return res.status(400).json({ success: false, message: "Setting Update Failed" });
+        };
+
+        return res.status(200).json({ success: true, message: "Setting Update Successfully!" });
+    } catch (error) {
+        console.error("Setting Update Error", error);
+        return res.status(400).json({ success: false, message: error.message });
+    };
+};
+
 export {
     getAdminProfile,
     getSettingDetails,
+    getSingleSettingDetails,
     changePassword,
     updateDiscountedPercentage,
+    updateSetting,
 };

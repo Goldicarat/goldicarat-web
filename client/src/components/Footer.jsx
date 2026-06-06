@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Diamond, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
+import { Diamond, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import { logo } from '../assets/images'
 
 export default function Footer() {
   return (
@@ -8,14 +9,25 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div>
             <div className="flex items-center gap-2 mb-6">
-              <Diamond className="w-8 h-8 text-gold-500" />
+              {/* <Diamond className="w-8 h-8 text-gold-500" />
               <div>
                 <h3 className="font-serif text-xl font-bold">Goldicarat</h3>
                 <p className="text-xs text-gold-400 tracking-wider">CUSTOM DIAMOND JEWELRY</p>
-              </div>
+              </div> */}
+              <Link to="/" className="flex items-center gap-2">
+                <img
+                  src={logo}
+                  className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800"
+                  alt="Goldicarat"
+                />
+                <div>
+                  <h3 className="font-serif text-xl font-bold">Goldicarat</h3>
+                  <p className="text-xs text-gold-400 tracking-wider">CUSTOM DIAMOND JEWELRY</p>
+                </div>
+              </Link>
             </div>
             <p className="text-gray-400 mb-6">
-              Experience the brilliance of ethically created lab-grown diamonds. 
+              Experience the brilliance of ethically created lab-grown diamonds.
               Each piece is crafted with precision and care to last a lifetime.
             </p>
             <div className="flex gap-4">

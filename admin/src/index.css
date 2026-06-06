@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.active {
+    background-color: black;
+    color: white;
+}
+
+.inset-y-25 {
+    top: 24px;
+    bottom: 0px;
+};
+
+.web-lab img {
+    height: 55px;
+}

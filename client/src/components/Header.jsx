@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Search, ShoppingBag, User, Heart, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, X, Search, ShoppingBag, User, Heart, LogOut, ChevronDown, Diamond } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
@@ -60,16 +60,15 @@ const jewelryCategories = [
 const NavLink = ({ to, children, onClick }) => {
   const location = useLocation()
   const isActive = location.pathname === to
-  
+
   return (
-    <Link 
-      to={to} 
+    <Link
+      to={to}
       onClick={onClick}
-      className={`transition-colors duration-300 font-medium ${
-        isActive 
-          ? 'text-gold-600' 
-          : 'text-gray-700 hover:text-gold-600'
-      }`}
+      className={`transition-colors duration-300 font-medium ${isActive
+        ? 'text-gold-600'
+        : 'text-gray-700 hover:text-gold-600'
+        }`}
     >
       {children}
     </Link>
@@ -89,7 +88,7 @@ const JewelryDropdown = ({ category, onClose }) => {
             <ul className="space-y-1.5">
               {category.collections.map((collection) => (
                 <li key={collection}>
-                  <Link 
+                  <Link
                     to={`/shop?category=${category.name.toLowerCase()}&collection=${collection.toLowerCase().replace(/\s+/g, '-')}`}
                     onClick={onClose}
                     className="text-gray-600 hover:text-gold-600 transition-colors text-sm block py-0.5"
@@ -106,7 +105,7 @@ const JewelryDropdown = ({ category, onClose }) => {
             <ul className="space-y-1.5">
               {category.shapes.map((shape) => (
                 <li key={shape}>
-                  <Link 
+                  <Link
                     to={`/shop?category=${category.name.toLowerCase()}&shape=${shape.toLowerCase()}`}
                     onClick={onClose}
                     className="text-gray-600 hover:text-gold-600 transition-colors text-sm block py-0.5"
@@ -123,7 +122,7 @@ const JewelryDropdown = ({ category, onClose }) => {
             <ul className="space-y-1.5">
               {category.genders.map((gender) => (
                 <li key={gender}>
-                  <Link 
+                  <Link
                     to={`/shop?category=${category.name.toLowerCase()}&gender=${gender.toLowerCase()}`}
                     onClick={onClose}
                     className="text-gray-600 hover:text-gold-600 transition-colors text-sm block py-0.5"
@@ -140,7 +139,7 @@ const JewelryDropdown = ({ category, onClose }) => {
             <ul className="space-y-1.5">
               {category.diamondType.map((type) => (
                 <li key={type}>
-                  <Link 
+                  <Link
                     to={`/shop?category=${category.name.toLowerCase()}&diamond=${type.toLowerCase().replace(/\s+/g, '-')}`}
                     onClick={onClose}
                     className="text-gray-600 hover:text-gold-600 transition-colors text-sm block py-0.5"
@@ -157,7 +156,7 @@ const JewelryDropdown = ({ category, onClose }) => {
             <ul className="space-y-1.5">
               {category.metals.map((metal) => (
                 <li key={metal}>
-                  <Link 
+                  <Link
                     to={`/shop?category=${category.name.toLowerCase()}&metal=${metal.toLowerCase().replace(/\s+/g, '-')}`}
                     onClick={onClose}
                     className="text-gray-600 hover:text-gold-600 transition-colors text-sm block py-0.5"
@@ -169,9 +168,9 @@ const JewelryDropdown = ({ category, onClose }) => {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-4 pt-4 border-t border-gray-200">
-          <Link 
+          <Link
             to={`/shop?category=${category.name.toLowerCase()}`}
             onClick={onClose}
             className="text-gold-600 hover:text-gold-700 font-medium text-sm inline-flex items-center gap-1"
@@ -228,7 +227,11 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-3 sm:py-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Goldicarat" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+            <img
+              src={logo}
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800"
+              alt="Goldicarat"
+            />
             <div>
               <h1 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                 Goldicarat
@@ -239,23 +242,22 @@ export default function Header() {
 
           <nav className="hidden xl:flex items-center gap-1">
             {jewelryCategories.map((category) => (
-              <div 
+              <div
                 key={category.name}
                 className="relative"
                 onMouseEnter={() => setActiveDropdown(category.name)}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
-                <button 
-                  className={`px-2.5 py-2 flex items-center gap-1 transition-colors duration-300 font-medium text-sm whitespace-nowrap ${
-                    location.pathname === '/shop' && activeDropdown === category.name
-                      ? 'text-gold-600'
-                      : 'text-gray-700 hover:text-gold-600'
-                  }`}
+                <button
+                  className={`px-2.5 py-2 flex items-center gap-1 transition-colors duration-300 font-medium text-sm whitespace-nowrap ${location.pathname === '/shop' && activeDropdown === category.name
+                    ? 'text-gold-600'
+                    : 'text-gray-700 hover:text-gold-600'
+                    }`}
                 >
                   {category.name}
                   <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === category.name ? 'rotate-180' : ''}`} />
                 </button>
-                
+
                 {activeDropdown === category.name && (
                   <JewelryDropdown category={category} onClose={handleDropdownClose} />
                 )}
@@ -264,42 +266,42 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <button 
+            <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
             </button>
-            
+
             <div className="relative">
-              <button 
+              <button
                 onClick={() => isLoggedIn() ? setIsUserMenuOpen(!isUserMenuOpen) : setIsAuthModalOpen(true)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden sm:block"
               >
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               </button>
-              
+
               {isUserMenuOpen && isLoggedIn() && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2">
                   <div className="px-4 py-2 border-b">
                     <p className="font-medium text-gray-900">Hello, {user?.name}</p>
                     <p className="text-sm text-gray-500">{user?.email}</p>
                   </div>
-                  <Link 
+                  <Link
                     to="/account"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
                     My Account
                   </Link>
-                  <Link 
+                  <Link
                     to="/orders"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
                     My Orders
                   </Link>
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2"
                   >
@@ -310,7 +312,7 @@ export default function Header() {
               )}
             </div>
 
-            <button 
+            <button
               onClick={() => setIsWishlistOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors relative hidden sm:block"
             >
@@ -321,7 +323,7 @@ export default function Header() {
                 </span>
               )}
             </button>
-            <button 
+            <button
               onClick={() => setIsCartOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
             >
@@ -332,7 +334,7 @@ export default function Header() {
                 </span>
               )}
             </button>
-            <button 
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="xl:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
@@ -367,7 +369,7 @@ export default function Header() {
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Collections</p>
                     <div className="flex flex-wrap gap-2">
                       {category.collections.map((col) => (
-                        <Link 
+                        <Link
                           key={col}
                           to={`/shop?category=${category.name.toLowerCase()}&collection=${col.toLowerCase().replace(/\s+/g, '-')}`}
                           onClick={handleNavClick}
@@ -382,7 +384,7 @@ export default function Header() {
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Metals</p>
                     <div className="flex flex-wrap gap-2">
                       {category.metals.map((metal) => (
-                        <Link 
+                        <Link
                           key={metal}
                           to={`/shop?category=${category.name.toLowerCase()}&metal=${metal.toLowerCase().replace(/\s+/g, '-')}`}
                           onClick={handleNavClick}
@@ -399,11 +401,11 @@ export default function Header() {
             <NavLink to="/about" onClick={handleNavClick}>About</NavLink>
             <NavLink to="/blog" onClick={handleNavClick}>Blog</NavLink>
             <NavLink to="/contact" onClick={handleNavClick}>Contact</NavLink>
-            
+
             {isLoggedIn() && (
               <div className="pt-4 border-t">
                 <p className="text-sm text-gray-500 mb-2">Logged in as {user?.name}</p>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="text-red-600 font-medium"
                 >
