@@ -9,6 +9,8 @@ import {
     getUserProfile,
     updateUserProfile,
     changeUserPassword,
+    forgotPassword,
+    resetPassword,
     addToCart,
     updateCart,
     getUserCart,
@@ -25,6 +27,7 @@ import {
 import adminAuth from "../middleware/adminAuth.js";
 import userAuth from "../middleware/userAuth.js";
 import { avatarUpload } from "../middleware/avatarUpload.mjs";
+import multer from "multer";
 
 const router = Router();
 
@@ -34,6 +37,8 @@ const routeValue = "/api/user/";
 router.post(`${routeValue}register`, userRegister);
 router.post(`${routeValue}login`, userLogin);
 router.post(`${routeValue}admin`, adminLogin);
+router.post(`${routeValue}forgot-password`, forgotPassword);
+router.post(`${routeValue}reset-password/:token`, resetPassword);
 
 // User-protected routes
 router.get(`${routeValue}profile`, userAuth, getUserProfile);
@@ -58,7 +63,20 @@ router.put(
 router.post(
     `${routeValue}upload-avatar`,
     userAuth,
-    avatarUpload.single("avatar"),
+    (req, res, next) => {
+        avatarUpload.single("avatar")(req, res, (err) => {
+            if (err instanceof multer.MulterError) {
+                if (err.code === "LIMIT_FILE_SIZE") {
+                    return res.status(400).json({ success: false, message: "File too large. Maximum size is 5MB." });
+                }
+                return res.status(400).json({ success: false, message: err.message });
+            }
+            if (err) {
+                return res.status(400).json({ success: false, message: err.message });
+            }
+            next();
+        });
+    },
     uploadUserAvatar
 );
 

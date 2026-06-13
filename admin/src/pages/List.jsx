@@ -10,6 +10,7 @@ import {
     FaBox,
     FaTimes,
     FaSync,
+    FaUpload,
 } from "react-icons/fa";
 import { IoMdClose, IoMdCloudUpload } from "react-icons/io";
 import { Link } from "react-router-dom";
@@ -33,6 +34,10 @@ const List = ({ token }) => {
     const [submitting, setSubmitting] = useState(false);
 
     const [categories, setCategories] = useState([]);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importJson, setImportJson] = useState("");
+    const [importPreview, setImportPreview] = useState([]);
+    const [importing, setImporting] = useState(false);
     // const [brands, setBrands] = useState([]);
 
     // Edit form data
@@ -42,15 +47,24 @@ const List = ({ token }) => {
         description: "",
         // brand: "",
         mrp: "",
-        price: "",
-        discountedPercentage: 10,
+        discountedPercentage: 0,
         stock: "",
         category: "",
+        shape: "",
+        metal: "",
         offer: false,
         isAvailable: true,
-        badge: false,
+        badge: "",
         tags: [],
-    });
+    weight: "",
+    freeShipping: false,
+    shippingCharge: "",
+    goldKarat: "",
+    price14k: "",
+    price18k: "",
+    price22k: "",
+    price24k: "",
+});
 
     const [imageFiles, setImageFiles] = useState({
         image1: null,
@@ -58,6 +72,7 @@ const List = ({ token }) => {
         image3: null,
         image4: null,
     });
+    const [goldPrices, setGoldPrices] = useState({});
     const fetchList = async () => {
         try {
             setLoading(true);
@@ -102,6 +117,9 @@ const List = ({ token }) => {
     useEffect(() => {
         fetchList();
         fetchCategoriesAndBrands();
+        api.get(`${serverUrl}/api/gold-price/current`).then((res) => {
+            if (res.data?.success) setGoldPrices(res.data.prices || {});
+        }).catch(() => {});
     }, []);
 
     // Handle form input changes
@@ -114,7 +132,7 @@ const List = ({ token }) => {
             });
         } else if (
             type === "select-one" &&
-            (name === "offer" || name === "isAvailable" || name === "badge")
+            (name === "offer" || name === "isAvailable")
         ) {
             setFormData({
                 ...formData,
@@ -122,9 +140,12 @@ const List = ({ token }) => {
             });
         } else if (
             name === "mrp" ||
-            name === "price" ||
             name === "discountedPercentage" ||
-            name === "stock"
+            name === "stock" ||
+            name === "price14k" ||
+            name === "price18k" ||
+            name === "price22k" ||
+            name === "price24k"
         ) {
             setFormData({
                 ...formData,
@@ -149,6 +170,65 @@ const List = ({ token }) => {
         }
     };
 
+    const handleImportFile = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const text = ev.target?.result;
+            setImportJson(text);
+            try {
+                const parsed = JSON.parse(text);
+                const arr = Array.isArray(parsed) ? parsed : parsed.products || [];
+                setImportPreview(arr);
+            } catch {
+                setImportPreview([]);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+    };
+
+    const handleParseJson = () => {
+        try {
+            const parsed = JSON.parse(importJson);
+            const arr = Array.isArray(parsed) ? parsed : parsed.products || [];
+            setImportPreview(arr);
+            if (arr.length === 0) toast.error("No products found in JSON");
+            else toast.success(`Found ${arr.length} product(s)`);
+        } catch {
+            toast.error("Invalid JSON format");
+            setImportPreview([]);
+        }
+    };
+
+    const handleBulkImport = async () => {
+        if (importPreview.length === 0) {
+            toast.error("No products to import. Parse JSON first.");
+            return;
+        }
+        setImporting(true);
+        try {
+            const res = await api.post(`${serverUrl}/api/product/bulk-import`, {
+                products: importPreview,
+            });
+            const data = res.data;
+            if (data.success) {
+                toast.success(data.message);
+                setShowImportModal(false);
+                setImportJson("");
+                setImportPreview([]);
+                fetchList();
+            } else {
+                toast.error(data.message);
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Import failed");
+        } finally {
+            setImporting(false);
+        }
+    };
+
     // Remove an image
     const removeImage = (imageKey) => {
         setImageFiles((prev) => ({
@@ -166,14 +246,23 @@ const List = ({ token }) => {
             description: product.description || "",
             // brand: product.brand || "",
             mrp: product.mrp || "",
-            price: product.price || "",
-            discountedPercentage: product.discountedPercentage || 10,
+            discountedPercentage: product.discountedPercentage || 0,
             stock: product.stock || 0,
             category: product.category || "",
+            shape: product.shape || "",
+            metal: product.metal || "",
             offer: product.offer || false,
             isAvailable: product.isAvailable !== false,
-            badge: product.badge || false,
+            badge: product.badge || "",
             tags: product.tags || [],
+            weight: product.weight || "",
+            freeShipping: product.freeShipping || false,
+            shippingCharge: product.shippingCharge || "",
+            goldKarat: product.goldKarat || "",
+            price14k: product.price14k || "",
+            price18k: product.price18k || "",
+            price22k: product.price22k || "",
+            price24k: product.price24k || "",
         });
         setImageFiles({
             image1: null,
@@ -194,14 +283,18 @@ const List = ({ token }) => {
             description: "",
             // brand: "",
             mrp: "",
-            price: "",
-            discountedPercentage: 10,
+            discountedPercentage: 0,
             stock: "",
             category: "",
+            shape: "",
+            metal: "",
             offer: false,
             isAvailable: true,
-            badge: false,
+            badge: "",
             tags: [],
+            weight: "",
+            freeShipping: false,
+            shippingCharge: "",
         });
         setImageFiles({
             image1: null,
@@ -248,14 +341,23 @@ const List = ({ token }) => {
             data.append("description", formData.description);
             // data.append("brand", formData.brand);
             data.append("mrp", formData.mrp);
-            data.append("price", formData.price);
             data.append("discountedPercentage", formData.discountedPercentage);
             data.append("stock", formData.stock);
             data.append("category", formData.category);
+            data.append("shape", formData.shape);
+            data.append("metal", formData.metal);
             data.append("offer", formData.offer);
             data.append("isAvailable", formData.isAvailable);
             data.append("badge", formData.badge);
             data.append("tags", JSON.stringify(formData.tags));
+            data.append("weight", formData.weight);
+            data.append("freeShipping", formData.freeShipping);
+            data.append("shippingCharge", formData.shippingCharge);
+            data.append("goldKarat", formData.goldKarat);
+            data.append("price14k", formData.price14k);
+            data.append("price18k", formData.price18k);
+            data.append("price22k", formData.price22k);
+            data.append("price24k", formData.price24k);
 
             // Append image files only if new images are selected
             Object.keys(imageFiles).forEach((key) => {
@@ -348,6 +450,13 @@ const List = ({ token }) => {
                         >
                             <FaSync className="w-4 h-4" />
                             Refresh
+                        </button>
+                        <button
+                            onClick={() => setShowImportModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                        >
+                            <FaUpload className="w-4 h-4" />
+                            Bulk Import
                         </button>
                         <Link
                             to="/add"
@@ -505,6 +614,9 @@ const List = ({ token }) => {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Discount Price
                                             </th>
+                                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Likes
+                                            </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Stock
                                             </th>
@@ -552,6 +664,12 @@ const List = ({ token }) => {
                                                             {product.discountedPercentage}% off
                                                         </div>
                                                     )}
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="flex items-center justify-center gap-1 text-sm text-gray-900">
+                                                        <span className="text-red-500">♥</span>
+                                                        {product.likeCount || 0}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="text-sm text-gray-900">
@@ -824,8 +942,63 @@ const List = ({ token }) => {
                                     </div>
                                 </div>
 
+                                {/* Gold Karat & Price */}
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                    <h4 className="text-sm font-semibold text-yellow-800 mb-3">Gold Karat & Price</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                        <div>
+                                            <Label>Gold Karat</Label>
+                                            <select
+                                                name="goldKarat"
+                                                value={formData.goldKarat}
+                                                onChange={handleInputChange}
+                                                className="mt-1 w-full border border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            >
+                                                <option value="">Select karat</option>
+                                                <option value="14">14k</option>
+                                                <option value="18">18k</option>
+                                                <option value="22">22k</option>
+                                                <option value="24">24k</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="weight">Weight (grams)</Label>
+                                            <input
+                                                type="number"
+                                                id="weight"
+                                                name="weight"
+                                                value={formData.weight}
+                                                onChange={handleInputChange}
+                                                min="0"
+                                                step="0.1"
+                                                className="mt-1 w-full border border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Current Gold Price (/gram)</Label>
+                                            <input
+                                                type="text"
+                                                value={formData.goldKarat ? `₹${Number(goldPrices[formData.goldKarat] || 0).toLocaleString('en-IN')}` : ''}
+                                                disabled
+                                                className="mt-1 w-full border border-yellow-300 rounded-md px-3 py-2 text-sm bg-white text-yellow-800 font-medium focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:opacity-100 disabled:cursor-default"
+                                            />
+                                        </div>
+                                        {formData.goldKarat && (
+                                            <div>
+                                                <Label>Estimated Gold Value</Label>
+                                                <input
+                                                    type="text"
+                                                    value={`₹${(Number(formData.weight || 0) * Number(goldPrices[formData.goldKarat] || 0)).toLocaleString('en-IN')}`}
+                                                    disabled
+                                                    className="mt-1 w-full border border-yellow-300 rounded-md px-3 py-2 text-sm bg-yellow-200 text-yellow-900 font-bold focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:opacity-100 disabled:cursor-default"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* Pricing & Stock */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                                     <div className="flex flex-col">
                                         <Label htmlFor="mrp">MRP *</Label>
                                         <Input
@@ -841,13 +1014,13 @@ const List = ({ token }) => {
                                     </div>
 
                                     <div className="flex flex-col">
-                                        <Label htmlFor="price">Discount Price</Label>
+                                        <Label htmlFor="price14k">Price (14k Gold) *</Label>
                                         <Input
                                             type="number"
+                                            step="0.01"
                                             min="0"
-                                            max="100"
-                                            name="price"
-                                            value={formData.price}
+                                            name="price14k"
+                                            value={formData.price14k}
                                             onChange={handleInputChange}
                                             className="mt-1"
                                             required
@@ -855,6 +1028,49 @@ const List = ({ token }) => {
                                     </div>
 
                                     <div className="flex flex-col">
+                                        <Label htmlFor="price18k">Price (18k Gold) *</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            name="price18k"
+                                            value={formData.price18k}
+                                            onChange={handleInputChange}
+                                            className="mt-1"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col">
+                                        <Label htmlFor="price22k">Price (22k Gold) *</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            name="price22k"
+                                            value={formData.price22k}
+                                            onChange={handleInputChange}
+                                            className="mt-1"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col">
+                                        <Label htmlFor="price24k">Price (24k Gold) *</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            name="price24k"
+                                            value={formData.price24k}
+                                            onChange={handleInputChange}
+                                            className="mt-1"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                                    <div className="flex-1">
                                         <Label htmlFor="stock">Stock Quantity *</Label>
                                         <Input
                                             type="number"
@@ -869,7 +1085,7 @@ const List = ({ token }) => {
                                 </div>
 
                                 {/* Settings */}
-                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                                     <div>
                                         <Label htmlFor="_type">Product Type</Label>
                                         <select
@@ -884,6 +1100,30 @@ const List = ({ token }) => {
                                             <option value="special_offers">Special Offers</option>
                                             <option value="promotions">Promotions</option>
                                         </select>
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="shape">Diamond Shape</Label>
+                                        <input
+                                            type="text"
+                                            name="shape"
+                                            value={formData.shape}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g. Round, Emerald"
+                                            className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="metal">Metal Type</Label>
+                                        <input
+                                            type="text"
+                                            name="metal"
+                                            value={formData.metal}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g. Yellow Gold"
+                                            className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
                                     </div>
 
                                     <div>
@@ -913,10 +1153,38 @@ const List = ({ token }) => {
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="badge">Show Badge</Label>
-                                        <select
+                                        <Label htmlFor="badge">Badge Text</Label>
+                                        <input
+                                            type="text"
                                             name="badge"
-                                            value={formData.badge.toString()}
+                                            value={formData.badge}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g. BEST SELLER"
+                                            className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Shipping */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                                    <div>
+                                        <Label htmlFor="shippingCharge">Shipping Charge (INR)</Label>
+                                        <input
+                                            type="number"
+                                            id="shippingCharge"
+                                            name="shippingCharge"
+                                            value={formData.shippingCharge}
+                                            onChange={handleInputChange}
+                                            min="0"
+                                            placeholder="e.g. 50"
+                                            className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="freeShipping">Free Shipping</Label>
+                                        <select
+                                            name="freeShipping"
+                                            value={formData.freeShipping.toString()}
                                             onChange={handleInputChange}
                                             className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
@@ -998,6 +1266,111 @@ const List = ({ token }) => {
                 )}
 
                 {/* Delete Modal */}
+                {showImportModal && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) {
+                                setShowImportModal(false);
+                                setImportJson("");
+                                setImportPreview([]);
+                            }
+                        }}
+                    >
+                        <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center p-6 border-b">
+                                <h2 className="text-xl font-semibold">Bulk Import Products</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowImportModal(false);
+                                        setImportJson("");
+                                        setImportPreview([]);
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <IoMdClose size={24} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Paste JSON or upload a <code>.json</code> file
+                                    </label>
+                                    <textarea
+                                        value={importJson}
+                                        onChange={(e) => setImportJson(e.target.value)}
+                                        placeholder={`[\n  {\n    "name": "Product Name",\n    "price": 29159,\n    "originalPrice": 35000,\n    "category": "rings",\n    "shape": "Round",\n    "metal": "Rose Gold",\n    "image": "https://...",\n    "badge": "BEST SELLER",\n    "description": "Description text"\n  }\n]`}
+                                        rows={10}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors font-medium">
+                                        <IoMdCloudUpload className="text-lg" />
+                                        Upload JSON File
+                                        <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+                                    </label>
+                                    <button
+                                        onClick={handleParseJson}
+                                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                                    >
+                                        Parse & Preview
+                                    </button>
+                                </div>
+
+                                {importPreview.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h3 className="font-medium text-gray-900">
+                                            Preview ({importPreview.length} product(s))
+                                        </h3>
+                                        <div className="max-h-60 overflow-y-auto border rounded-lg divide-y">
+                                            {importPreview.map((p, i) => (
+                                                <div key={i} className="flex items-center gap-3 p-3 hover:bg-gray-50">
+                                                    {p.image && (
+                                                        <img src={p.image} alt="" className="w-10 h-10 rounded object-cover" />
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 truncate">{p.name || "Unnamed"}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {p.category} {p.metal ? `| ${p.metal}` : ""} {p.shape ? `| ${p.shape}` : ""}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right text-sm">
+                                                        <p className="font-medium">₹{p.price?.toLocaleString()}</p>
+                                                        {p.originalPrice && (
+                                                            <p className="text-xs text-gray-400 line-through">₹{p.originalPrice.toLocaleString()}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <button
+                                            onClick={handleBulkImport}
+                                            disabled={importing}
+                                            className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {importing ? (
+                                                <>
+                                                    <SmallLoader />
+                                                    Importing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaUpload />
+                                                    Import {importPreview.length} Product(s)
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {showDeleteModal && (
                     <div
                         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"

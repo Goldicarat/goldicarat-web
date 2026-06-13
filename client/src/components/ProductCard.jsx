@@ -1,15 +1,23 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Star, Heart, Eye, Check } from 'lucide-react'
+import { Star, Heart, Eye } from 'lucide-react'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate()
+
+  const productId = product._id || product.id
+  const productImage = product.image || (product.images && product.images[0]) || ''
+  const productRating = product.averageRating || product.rating || 0
+  const productReviews = product.totalRatings || product.reviews || 0
+  const productPrice = product.price14k || product.price
+  const productMrp = product.mrp || product.originalPrice || 0
+
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { addToCart } = useCart()
   const { requireAuth } = useAuth()
-  const inWishlist = isInWishlist(product.id)
+  const inWishlist = isInWishlist(productId)
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
@@ -21,13 +29,13 @@ export default function ProductCard({ product }) {
 
   const handleQuickView = (e) => {
     e.preventDefault()
-    navigate(`/product/${product.id}`)
+    navigate(`/product/${productId}`)
   }
 
   const handleAddToCart = (e) => {
     e.preventDefault()
     requireAuth(() => {
-      addToCart(product)
+      addToCart({...product, price: productPrice})
     })
   }
 
@@ -42,9 +50,9 @@ export default function ProductCard({ product }) {
   return (
     <div className="group bg-white rounded-xl overflow-hidden card-hover border border-gray-100">
       <div className="relative aspect-square overflow-hidden bg-gray-50">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${productId}`}>
           <img
-            src={product.image}
+            src={productImage}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
@@ -74,7 +82,7 @@ export default function ProductCard({ product }) {
 
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
           <Link 
-            to={`/product/${product.id}`}
+            to={`/product/${productId}`}
             className="p-3 bg-white rounded-full hover:bg-gold-500 hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100"
           >
             <Eye className="w-5 h-5" />
@@ -94,13 +102,13 @@ export default function ProductCard({ product }) {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              className={`w-4 h-4 ${i < product.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+              className={`w-4 h-4 ${i < productRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
             />
           ))}
-          <span className="text-xs text-gray-500 ml-2">({product.reviews})</span>
+          <span className="text-xs text-gray-500 ml-2">({productReviews})</span>
         </div>
 
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${productId}`}>
           <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 min-h-[48px] hover:text-gold-600 transition-colors">
             {product.name}
           </h3>
@@ -110,18 +118,18 @@ export default function ProductCard({ product }) {
 
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-lg font-bold text-gray-900">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
+            <span className="text-lg font-bold text-gray-900">{formatPrice(productPrice)}</span>
+            {productMrp > productPrice && (
               <span className="text-sm text-gray-400 line-through ml-2">
-                {formatPrice(product.originalPrice)}
+                {formatPrice(productMrp)}
               </span>
             )}
           </div>
         </div>
 
         <div className="flex gap-2 mt-3">
-          <span className="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{product.shape}</span>
-          <span className="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{product.metal}</span>
+          {product.shape && <span className="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{product.shape}</span>}
+          {product.metal && <span className="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{product.metal}</span>}
         </div>
 
         <button 

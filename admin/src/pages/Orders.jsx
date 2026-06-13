@@ -36,6 +36,8 @@ const Orders = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [newStatus, setNewStatus] = useState("");
     const [newPaymentStatus, setNewPaymentStatus] = useState("");
+    const [newShippingCourier, setNewShippingCourier] = useState("");
+    const [newShippingAwb, setNewShippingAwb] = useState("");
 
     const statusOptions = [
         "pending",
@@ -73,11 +75,13 @@ const Orders = () => {
     // Update order status
     const updateOrderStatus = async (orderId, status, paymentStatus = null) => {
         try {
-            const updateData = { orderId, status };
+            const updateData = { orderId, status, shipping: {} };
 
             if (paymentStatus) {
                 updateData.paymentStatus = paymentStatus;
             }
+            if (newShippingCourier) updateData.shipping.courier = newShippingCourier;
+            if (newShippingAwb) updateData.shipping.awb = newShippingAwb;
 
             const response = await api.post(`${serverUrl}/api/order/update-status`, updateData);
 
@@ -125,6 +129,8 @@ const Orders = () => {
         setEditingOrder(order);
         setNewStatus(order.status);
         setNewPaymentStatus(order.paymentStatus);
+        setNewShippingCourier(order.shipping?.courier || "");
+        setNewShippingAwb(order.shipping?.awb || "");
         setShowEditModal(true);
     };
 
@@ -308,10 +314,9 @@ const Orders = () => {
                                 Revenue
                             </p>
                             <p className="text-xl lg:text-2xl font-bold text-purple-600">
-                                $
-                                {orders
-                                    .reduce((sum, order) => sum + order.amount, 0)
-                                    .toFixed(2)}
+                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
+                                    orders.reduce((sum, order) => sum + order.amount, 0)
+                                )}
                             </p>
                         </div>
                         <FaCreditCard className="w-6 h-6 lg:w-8 lg:h-8 text-purple-600" />
@@ -454,7 +459,7 @@ const Orders = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">
-                                            ${order.amount.toFixed(2)}
+                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.amount)}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -614,7 +619,7 @@ const Orders = () => {
                             <div className="mb-4">
                                 <div className="text-xs text-gray-500 mb-1">Amount</div>
                                 <div className="text-lg font-bold text-gray-900">
-                                    ${order.amount.toFixed(2)}
+                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.amount)}
                                 </div>
                             </div>
 
@@ -711,6 +716,32 @@ const Orders = () => {
                                     ))}
                                 </select>
                             </div>
+
+                            {newStatus === "shipped" && (
+                              <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3">Shipping Tracking</h4>
+                                <div className="mb-3">
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">Courier Name</label>
+                                  <input
+                                    type="text"
+                                    value={newShippingCourier}
+                                    onChange={(e) => setNewShippingCourier(e.target.value)}
+                                    placeholder="e.g. Shiprocket, Delhivery, Blue Dart"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">AWB Number</label>
+                                  <input
+                                    type="text"
+                                    value={newShippingAwb}
+                                    onChange={(e) => setNewShippingAwb(e.target.value)}
+                                    placeholder="e.g. 1234567890"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                  />
+                                </div>
+                              </div>
+                            )}
 
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <button

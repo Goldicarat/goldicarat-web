@@ -1,8 +1,9 @@
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
 export default function CartDrawer() {
+  const navigate = useNavigate()
   const { 
     cartItems, 
     cartTotal, 
@@ -12,6 +13,11 @@ export default function CartDrawer() {
     updateQuantity, 
     removeFromCart 
   } = useCart()
+
+  const handleViewCart = () => {
+    setIsCartOpen(false)
+    navigate('/cart')
+  }
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
@@ -68,7 +74,7 @@ export default function CartDrawer() {
                     className="flex gap-4 p-4 bg-gray-50 rounded-xl"
                   >
                     <img 
-                      src={item.image} 
+                      src={item.image || (item.images && item.images[0]) || ''} 
                       alt={item.name}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
@@ -119,8 +125,8 @@ export default function CartDrawer() {
               <p className="text-sm text-gray-500 mb-4">
                 Shipping and taxes calculated at checkout
               </p>
-              <button className="w-full btn-primary mb-2">
-                Proceed to Checkout
+              <button onClick={handleViewCart} className="w-full btn-primary mb-2">
+                View Full Cart
               </button>
               <Link 
                 to="/shop"

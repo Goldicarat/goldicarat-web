@@ -50,21 +50,25 @@ app.use(
         allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     }),
 );
+// Webhook routes need raw body — register BEFORE express.json()
+const setupWebhooks = async () => {
+    const { handleRazorpayWebhook } = await import("./controllers/paymentController.js");
+    app.post("/api/payment/razorpay/webhook", express.raw({ type: "application/json" }), handleRazorpayWebhook);
+};
+await setupWebhooks();
+
 app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ extended: true, limit: "500mb" }));
-
-// dbConnect();
-// connectCloudinary();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const routesPath = path.resolve(__dirname, "./routes");
 const routeFiles = readdirSync(routesPath);
-routeFiles.map(async (file) => {
+await Promise.all(routeFiles.map(async (file) => {
     const routeModule = await import(`./routes/${file}`);
     app.use("/", routeModule.default);
-});
+}));
 
 app.get("/", (req, res) => {
     res.status(200).send("API Active Now");

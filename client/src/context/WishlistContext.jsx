@@ -6,25 +6,29 @@ export function WishlistProvider({ children }) {
   const [wishlistItems, setWishlistItems] = useState([])
   const [isWishlistOpen, setIsWishlistOpen] = useState(false)
 
+  const getProductId = (product) => product._id || product.id
+
   const addToWishlist = (product) => {
+    const pid = getProductId(product)
     setWishlistItems(prevItems => {
-      const exists = prevItems.find(item => item.id === product.id)
+      const exists = prevItems.find(item => getProductId(item) === pid)
       if (exists) return prevItems
-      return [...prevItems, product]
+      return [...prevItems, { ...product, id: pid }]
     })
   }
 
   const removeFromWishlist = (productId) => {
-    setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId))
+    setWishlistItems(prevItems => prevItems.filter(item => getProductId(item) !== productId))
   }
 
   const isInWishlist = (productId) => {
-    return wishlistItems.some(item => item.id === productId)
+    return wishlistItems.some(item => getProductId(item) === productId)
   }
 
   const toggleWishlist = (product) => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id)
+    const pid = getProductId(product)
+    if (isInWishlist(pid)) {
+      removeFromWishlist(pid)
     } else {
       addToWishlist(product)
     }

@@ -546,6 +546,14 @@ const updateOrderStatus = async (req, res) => {
         if (paymentStatus) {
             order.paymentStatus = paymentStatus;
         }
+        if (req.body.shipping) {
+            const { courier, awb } = req.body.shipping;
+            if (courier) order.shipping.courier = courier;
+            if (awb) order.shipping.awb = awb;
+            if (awb && !order.shipping.status) {
+                order.shipping.status = "Shipped";
+            }
+        }
         order.updatedAt = Date.now();
         await order.save();
 

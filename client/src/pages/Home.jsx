@@ -1,10 +1,59 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles, Shield, Truck, RotateCcw, CreditCard } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import TrustBadges from '../components/TrustBadges'
-import { products, categories, diamondShapes, blogPosts, testimonials } from '../data/products'
+import { blogPosts, testimonials } from '../data/products'
+import { fetchProductsByType } from '../api/productService'
+import { fetchSiteSettings } from '../api/settingService'
+import { fetchCategories } from '../api/categoryService'
 
 export default function Home() {
+  const [bestSellers, setBestSellers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState([])
+  const [siteSettings, setSiteSettings] = useState(null)
+
+  useEffect(() => {
+    const loadBestSellers = async () => {
+      try {
+        const data = await fetchProductsByType('best_sellers', { _perPage: 8 })
+        if (data?.success) {
+          setBestSellers(data.products || [])
+        } else {
+          setBestSellers([])
+        }
+      } catch (err) {
+        console.error('Error loading best sellers:', err)
+        setBestSellers([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadBestSellers()
+  }, [])
+
+  useEffect(() => {
+    const loadSiteSettings = async () => {
+      try {
+        const data = await fetchSiteSettings()
+        if (data?.success) setSiteSettings(data.setting)
+      } catch (err) {
+        console.error('Error loading site settings:', err)
+      }
+    }
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories()
+        if (data?.success) setCategories(data.categories || [])
+      } catch (err) {
+        console.error('Error loading categories:', err)
+      }
+    }
+    loadSiteSettings()
+    loadCategories()
+  }, [])
+
   return (
     <div>
       <section className="relative bg-gradient-to-br from-gold-50 via-white to-gold-100 overflow-hidden">
@@ -38,7 +87,7 @@ export default function Home() {
             <div className="relative">
               <div className="relative z-10">
                 <img
-                  src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop"
+                  src={siteSettings?.heroBanner?.isActive && siteSettings.heroBanner.image ? siteSettings.heroBanner.image : "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop"}
                   alt="Diamond Ring"
                   className="rounded-2xl shadow-2xl mx-auto"
                 />
@@ -76,19 +125,35 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((category, index) => (
+            {categories.length > 0 ? categories.map((category, index) => (
               <Link 
-                key={index} 
-                to={`/shop?category=${category.name.toLowerCase()}`}
+                key={category._id || index} 
+                to={category.slug ? `/shop?category=${category.slug}` : `/shop?category=${category.name?.toLowerCase()}`}
                 className="group p-6 bg-gray-50 rounded-xl text-center hover:bg-gold-50 hover:shadow-lg transition-all duration-300"
               >
-                <span className="text-4xl mb-3 block">{category.icon}</span>
+                {category.image ? (
+                  <img src={category.image} alt={category.name} className="w-16 h-16 mx-auto mb-3 object-cover rounded-full" />
+                ) : (
+                  <span className="text-4xl mb-3 block">💎</span>
+                )}
                 <h3 className="font-semibold text-gray-900 group-hover:text-gold-600 transition-colors">
                   {category.name}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">{category.count} items</p>
               </Link>
-            ))}
+            )) : (
+              <>
+                {['Rings', 'Bracelets', 'Necklaces', 'Pendants', 'Earrings', 'Wedding Rings'].map((name, index) => (
+                  <Link 
+                    key={index} 
+                    to={`/shop?category=${name.toLowerCase()}`}
+                    className="group p-6 bg-gray-50 rounded-xl text-center hover:bg-gold-50 hover:shadow-lg transition-all duration-300"
+                  >
+                    <span className="text-4xl mb-3 block">💎</span>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-gold-600 transition-colors">{name}</h3>
+                  </Link>
+                ))}
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -101,20 +166,23 @@ export default function Home() {
           </div>
           
           <div className="flex flex-wrap justify-center gap-4">
-            {diamondShapes.map((shape, index) => (
-              <Link 
-                key={index} 
-                to={`/shop?shape=${shape.name.toLowerCase()}`}
-                className="group w-24 h-24 md:w-28 md:h-28 rounded-full bg-white border-2 border-gray-200 flex flex-col items-center justify-center hover:border-gold-500 hover:bg-gold-50 transition-all duration-300"
-              >
-                <span className="text-2xl md:text-3xl text-gold-500 group-hover:scale-110 transition-transform">
-                  {shape.icon}
-                </span>
-                <span className="text-xs font-medium text-gray-700 mt-2 group-hover:text-gold-600 transition-colors">
-                  {shape.name}
-                </span>
-              </Link>
-            ))}
+            {(siteSettings?.diamondShapes?.length > 0 ? siteSettings.diamondShapes : ['Round', 'Emerald', 'Princess', 'Oval', 'Pear', 'Heart']).map((shape, index) => {
+              const name = typeof shape === 'string' ? shape : shape.name
+              return (
+                <Link 
+                  key={index} 
+                  to={`/shop?shape=${name.toLowerCase()}`}
+                  className="group w-24 h-24 md:w-28 md:h-28 rounded-full bg-white border-2 border-gray-200 flex flex-col items-center justify-center hover:border-gold-500 hover:bg-gold-50 transition-all duration-300"
+                >
+                  <span className="text-2xl md:text-3xl text-gold-500 group-hover:scale-110 transition-transform">
+                    💎
+                  </span>
+                  <span className="text-xs font-medium text-gray-700 mt-2 group-hover:text-gold-600 transition-colors">
+                    {name}
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -135,41 +203,61 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.slice(0, 8).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {loading
+              ? [...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100 animate-pulse">
+                    <div className="aspect-square bg-gray-200"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                ))
+              : bestSellers.length > 0
+                ? bestSellers.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))
+                : <p className="col-span-full text-center text-gray-500 py-8">No products available</p>
+            }
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-r from-gold-600 to-gold-500 text-white">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <span className="inline-block px-4 py-2 bg-white/20 rounded-full text-sm font-medium mb-6">
-                Limited Edition Collection
-              </span>
-              <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-                The Jane Goodall Collection
-              </h2>
-              <p className="text-lg text-gold-100 mb-8">
-                Limited Edition, Limitless Impact. Shop Medallions With Meaning - 
-                A portion of every sale supports wildlife conservation.
-              </p>
-              <button className="bg-white text-gold-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center gap-2">
-                Shop The Collection <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&h=500&fit=crop"
-                alt="Jane Goodall Collection"
-                className="rounded-2xl shadow-2xl"
-              />
+      {siteSettings?.collectionBanner?.isActive && (
+        <section className="py-16 bg-gradient-to-r from-gold-600 to-gold-500 text-white">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                {siteSettings.collectionBanner.subtitle && (
+                  <span className="inline-block px-4 py-2 bg-white/20 rounded-full text-sm font-medium mb-6">
+                    {siteSettings.collectionBanner.subtitle}
+                  </span>
+                )}
+                <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+                  {siteSettings.collectionBanner.title || 'Collection'}
+                </h2>
+                {siteSettings.collectionBanner.description && (
+                  <p className="text-lg text-gold-100 mb-8">{siteSettings.collectionBanner.description}</p>
+                )}
+                <Link
+                  to={siteSettings.collectionBanner.link || '/shop'}
+                  className="bg-white text-gold-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
+                >
+                  {siteSettings.collectionBanner.sale || 'Shop The Collection'} <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+              <div className="relative">
+                <img
+                  src={siteSettings.collectionBanner.image || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&h=500&fit=crop"}
+                  alt={siteSettings.collectionBanner.title || 'Collection'}
+                  className="rounded-2xl shadow-2xl"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -179,50 +267,53 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: "Ombre Jewelry", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=400&fit=crop" },
-              { name: "Bezel Jewelry", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=400&fit=crop" },
-              { name: "Cocktail Rings", image: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=300&h=400&fit=crop" },
-              { name: "Sol Collection", image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=400&fit=crop" },
-            ].map((item, index) => (
-              <div key={index} className="group relative overflow-hidden rounded-xl aspect-[3/4]">
+            {(siteSettings?.spotlight?.length > 0 ? siteSettings.spotlight : [
+              { title: "Ombre Jewelry", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=400&fit=crop", link: "/shop" },
+              { title: "Bezel Jewelry", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=400&fit=crop", link: "/shop" },
+              { title: "Cocktail Rings", image: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=300&h=400&fit=crop", link: "/shop" },
+              { title: "Sol Collection", image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=400&fit=crop", link: "/shop" },
+            ]).map((item, index) => (
+              <Link key={index} to={item.link || "/shop"} className="group relative overflow-hidden rounded-xl aspect-[3/4] block">
                 <img
                   src={item.image}
-                  alt={item.name}
+                  alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h3 className="text-white text-xl font-semibold mb-2">{item.name}</h3>
-                  <button className="text-gold-300 text-sm font-medium flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <h3 className="text-white text-xl font-semibold mb-2">{item.title}</h3>
+                  <span className="text-gold-300 text-sm font-medium flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     Explore <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-gray-900 text-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">Price Range</h2>
-            <p className="text-gray-400">Shop unique jewellery within your budget</p>
+      {siteSettings?.priceRanges?.length > 0 && (
+        <section className="py-16 bg-gray-900 text-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">Price Range</h2>
+              <p className="text-gray-400">Shop unique jewellery within your budget</p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-4">
+              {siteSettings.priceRanges.map((range, index) => (
+                <Link
+                  key={index}
+                  to={range.max ? `/shop?minPrice=${range.min}&maxPrice=${range.max}` : `/shop?minPrice=${range.min}`}
+                  className="px-8 py-4 bg-gray-800 rounded-lg hover:bg-gold-500 transition-colors font-medium inline-block"
+                >
+                  {range.label || `₹${range.min}${range.max ? `-₹${range.max}` : '+'}`}
+                </Link>
+              ))}
+            </div>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-4">
-            {['$0-$500', '$500-$1000', '$1000-$2000', '$2000-$5000', '$5000+'].map((range, index) => (
-              <button 
-                key={index}
-                className="px-8 py-4 bg-gray-800 rounded-lg hover:bg-gold-500 transition-colors font-medium"
-              >
-                {range}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">

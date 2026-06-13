@@ -21,21 +21,31 @@ const Add = ({ token }) => {
         name: "",
         description: "",
         mrp: "",
-        price: "",
         discountedPercentage: 0,
         stock: "",
         category: "",
+        shape: "",
+        metal: "",
         offer: false,
         isAvailable: true,
-        badge: false,
+        badge: "",
         tags: [],
-    });
+    weight: "",
+    freeShipping: false,
+    shippingCharge: "",
+    goldKarat: "",
+    price14k: "",
+    price18k: "",
+    price22k: "",
+    price24k: "",
+});
     const [imageFiles, setImageFiles] = useState({
         image1: null,
         image2: null,
         image3: null,
         image4: null,
     });
+    const [goldPrices, setGoldPrices] = useState({});
 
     // Fetch categories
     const fetchCategories = async () => {
@@ -64,6 +74,9 @@ const Add = ({ token }) => {
 
     useEffect(() => {
         fetchCategories();
+        api.get(`${serverUrl}/api/gold-price/current`).then((res) => {
+            if (res.data?.success) setGoldPrices(res.data.prices || {});
+        }).catch(() => {});
     }, []);
 
     // Handle input change
@@ -76,7 +89,7 @@ const Add = ({ token }) => {
             });
         } else if (
             type === "select-one" &&
-            (name === "offer" || name === "isAvailable" || name === "badge")
+            (name === "offer" || name === "isAvailable")
         ) {
             setFormData({
                 ...formData,
@@ -84,9 +97,12 @@ const Add = ({ token }) => {
             });
         } else if (
             name === "mrp" ||
-            name === "price" ||
             name === "discountedPercentage" ||
-            name === "stock"
+            name === "stock" ||
+            name === "price14k" ||
+            name === "price18k" ||
+            name === "price22k" ||
+            name === "price24k"
         ) {
             setFormData({
                 ...formData,
@@ -155,12 +171,22 @@ const Add = ({ token }) => {
             data.append("discountedPercentage", formData.discountedPercentage);
             data.append("stock", formData.stock);
             data.append("category", formData.category);
+            data.append("shape", formData.shape);
+            data.append("metal", formData.metal);
             data.append("offer", formData.offer);
             data.append("isAvailable", formData.isAvailable);
             data.append("badge", formData.badge);
             data.append("tags", JSON.stringify(formData.tags));
+            data.append("weight", formData.weight);
+            data.append("freeShipping", formData.freeShipping);
+            data.append("shippingCharge", formData.shippingCharge);
+            data.append("goldKarat", formData.goldKarat);
+            data.append("price14k", formData.price14k);
+            data.append("price18k", formData.price18k);
+            data.append("price22k", formData.price22k);
+            data.append("price24k", formData.price24k);
 
-            // Append image files
+        // Append image files
             Object.keys(imageFiles).forEach((key) => {
                 if (imageFiles[key]) {
                     data.append(key, imageFiles[key]);
@@ -335,12 +361,70 @@ const Add = ({ token }) => {
                             </div>
                         </div>
 
+                        {/* Gold Karat & Price */}
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg font-semibold text-yellow-800 mb-4">
+                                Gold Karat & Price
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                <div>
+                                    <Label>Gold Karat</Label>
+                                    <select
+                                        name="goldKarat"
+                                        value={formData.goldKarat}
+                                        onChange={handleChange}
+                                        className="mt-1 w-full border border-yellow-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                    >
+                                        <option value="">Select karat</option>
+                                        <option value="14">14k</option>
+                                        <option value="18">18k</option>
+                                        <option value="22">22k</option>
+                                        <option value="24">24k</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="weight">Weight (grams)</Label>
+                                    <input
+                                        type="number"
+                                        id="weight"
+                                        name="weight"
+                                        value={formData.weight}
+                                        onChange={handleChange}
+                                        min="0"
+                                        step="0.1"
+                                        placeholder="e.g. 2.5"
+                                        className="mt-1 w-full border border-yellow-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Current Gold Price (/gram)</Label>
+                                    <input
+                                        type="text"
+                                        value={formData.goldKarat ? `₹${Number(goldPrices[formData.goldKarat] || 0).toLocaleString('en-IN')}` : ''}
+                                        disabled
+                                        className="mt-1 w-full border border-yellow-300 rounded-md px-4 py-2 bg-white text-yellow-800 font-medium focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:opacity-100 disabled:cursor-default"
+                                    />
+                                </div>
+                                {formData.goldKarat && (
+                                    <div>
+                                        <Label>Estimated Gold Value</Label>
+                                        <input
+                                            type="text"
+                                            value={`₹${(Number(formData.weight || 0) * Number(goldPrices[formData.goldKarat] || 0)).toLocaleString('en-IN')}`}
+                                            disabled
+                                            className="mt-1 w-full border border-yellow-300 rounded-md px-4 py-2 bg-yellow-200 text-yellow-900 font-bold focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:opacity-100 disabled:cursor-default"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Pricing */}
                         <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">
                                 Pricing & Stock
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 sm:gap-6">
                                 <div className="flex flex-col">
                                     <Label htmlFor="mrp">MRP *</Label>
                                     <Input
@@ -356,21 +440,64 @@ const Add = ({ token }) => {
                                     />
                                 </div>
                                 <div className="flex flex-col">
-                                    <Label htmlFor="price">Discount Price *</Label>
+                                    <Label htmlFor="price14k">Price (14k Gold) *</Label>
                                     <Input
                                         type="number"
                                         step="0.01"
                                         min="0"
                                         placeholder="0.00"
-                                        name="price"
-                                        value={formData.price}
+                                        name="price14k"
+                                        value={formData.price14k}
                                         onChange={handleChange}
                                         className="mt-1"
                                         required
                                     />
                                 </div>
-
                                 <div className="flex flex-col">
+                                    <Label htmlFor="price18k">Price (18k Gold) *</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0.00"
+                                        name="price18k"
+                                        value={formData.price18k}
+                                        onChange={handleChange}
+                                        className="mt-1"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <Label htmlFor="price22k">Price (22k Gold) *</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0.00"
+                                        name="price22k"
+                                        value={formData.price22k}
+                                        onChange={handleChange}
+                                        className="mt-1"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <Label htmlFor="price24k">Price (24k Gold) *</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0.00"
+                                        name="price24k"
+                                        value={formData.price24k}
+                                        onChange={handleChange}
+                                        className="mt-1"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-4">
+                                <div className="flex-1">
                                     <Label htmlFor="stock">Stock Quantity *</Label>
                                     <Input
                                         type="number"
@@ -383,22 +510,6 @@ const Add = ({ token }) => {
                                         required
                                     />
                                 </div>
-
-                                {/* <div className="flex flex-col">
-                                    <Label htmlFor="discountedPercentage">
-                                        Online Payment Discount (in %)
-                                    </Label>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        placeholder="0"
-                                        name="discountedPercentage"
-                                        value={formData.discountedPercentage}
-                                        onChange={handleChange}
-                                        className="mt-1"
-                                    />
-                                </div> */}
                             </div>
                         </div>
 
@@ -432,6 +543,30 @@ const Add = ({ token }) => {
                                 </div>
 
                                 <div>
+                                    <Label htmlFor="shape">Diamond Shape</Label>
+                                    <input
+                                        type="text"
+                                        name="shape"
+                                        value={formData.shape}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Round, Emerald, Pear"
+                                        className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="metal">Metal Type</Label>
+                                    <input
+                                        type="text"
+                                        name="metal"
+                                        value={formData.metal}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Yellow Gold, Rose Gold"
+                                        className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+
+                                <div>
                                     <Label htmlFor="isAvailable">Availability</Label>
                                     <select
                                         name="isAvailable"
@@ -458,10 +593,41 @@ const Add = ({ token }) => {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="badge">Show Badge</Label>
-                                    <select
+                                    <Label htmlFor="badge">Badge Text</Label>
+                                    <input
+                                        type="text"
                                         name="badge"
-                                        value={formData.badge.toString()}
+                                        value={formData.badge}
+                                        onChange={handleChange}
+                                        placeholder="e.g. BEST SELLER, NEW, TRENDING"
+                                        className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Shipping */}
+                        <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Shipping Settings</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <Label htmlFor="shippingCharge">Shipping Charge (INR)</Label>
+                                    <input
+                                        type="number"
+                                        id="shippingCharge"
+                                        name="shippingCharge"
+                                        value={formData.shippingCharge}
+                                        onChange={handleChange}
+                                        min="0"
+                                        placeholder="e.g. 50"
+                                        className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="freeShipping">Free Shipping</Label>
+                                    <select
+                                        name="freeShipping"
+                                        value={formData.freeShipping.toString()}
                                         onChange={handleChange}
                                         className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >

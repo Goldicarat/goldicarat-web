@@ -2,24 +2,46 @@ import axios from "axios";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import orderModel from "../models/orderModel.js";
+import productModel from "../models/productModel.js";
 import userModel from "../models/userModel.js";
+import settingModel from "../models/settingModel.js";
 import { getTomorrowInTimezone } from "../config/general.js";
 
 const { ObjectId } = mongoose.Types;
 
-const SHIPMENT_BASE_URL = process.env.SHIPMENT_BASE_URL;
 const TOKEN = process.env.DELHIVERY_TOKEN;
 
 let token = null;
 
+const getShipmentConfig = async () => {
+    const setting = await settingModel.findOne({});
+    const mode = setting?.shipmentMode || "test";
+    const isTestMode = mode === "test";
+
+    return {
+        isTestMode,
+        email: mode === "live" && setting?.shipmentEmail
+            ? setting.shipmentEmail
+            : process.env.SHIPMENT_EMAIL,
+        password: mode === "live" && setting?.shipmentPassword
+            ? setting.shipmentPassword
+            : process.env.SHIPMENT_PASSWORD,
+        baseUrl: mode === "live" && setting?.shipmentBaseUrl
+            ? setting.shipmentBaseUrl
+            : process.env.SHIPMENT_BASE_URL,
+    };
+};
+
 export const getToken = async () => {
     if (token) return token;
 
+    const config = await getShipmentConfig();
+
     const res = await axios.post(
-        `${SHIPMENT_BASE_URL}/auth/login`,
+        `${config.baseUrl}/auth/login`,
         {
-            email: process.env.SHIPMENT_EMAIL,
-            password: process.env.SHIPMENT_PASSWORD,
+            email: config.email,
+            password: config.password,
         },
     );
 
@@ -52,10 +74,11 @@ export const handleOrderTrack = async (req, res) => {
             });
         };
 
+        const config = await getShipmentConfig();
         const token = await getToken();
 
         const shipmentRes = await axios.get(
-            `${SHIPMENT_BASE_URL}/courier/track/awb/${order.shipping.awb}`,
+            `${config.baseUrl}/courier/track/awb/${order.shipping.awb}`,
             { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log("shipmentRes------------>", shipmentRes);
@@ -64,9 +87,9 @@ export const handleOrderTrack = async (req, res) => {
             return res.status(400).json({ success: false, message: "No tracking data" });
         };
 
-        const shipment = shipmentRes?.tracking_data;
+        const trackingData = shipmentRes?.data?.tracking_data;
 
-        if (!shipment) {
+        if (!trackingData) {
             return res.json({ success: false, message: "No tracking data" });
         };
 
@@ -74,8 +97,8 @@ export const handleOrderTrack = async (req, res) => {
             success: true,
             shipmentDetails: {
                 awb: order.shipping.awb,
-                status: shipment.shipment_status,
-                history: shipment.shipment_track_activities.map((item) => ({
+                status: trackingData.shipment_status,
+                history: (trackingData.shipment_track_activities || []).map((item) => ({
                     status: item.status,
                     location: item.location,
                     time: item.date,
@@ -91,6 +114,18 @@ export const handleOrderTrack = async (req, res) => {
 
 export const createShipment = async (order) => {
     try {
+        const config = await getShipmentConfig();
+
+        if (config.isTestMode) {
+            return {
+                success: true,
+                message: "",
+                data: {
+                    shipment_id: `TEST_SHIPMENT_${Date.now()}`,
+                },
+            };
+        };
+
         const token = await getToken();
         console.log("token--------------->", token);
 
@@ -133,7 +168,7 @@ export const createShipment = async (order) => {
         console.log("createShipment payload----->", payload);
 
         const res = await axios.post(
-            `${SHIPMENT_BASE_URL}/orders/create/adhoc`, payload,
+            `${config.baseUrl}/orders/create/adhoc`, payload,
             { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log("createShipment res.data----->", res.data);
@@ -151,7 +186,9 @@ export const generateAWB = async (shipmentId) => {
             return { success: false, message: "Shipment Id is required!" };
         };
 
-        if (process.env.SHIPMENT_TEST_MODE === "true") {
+        const config = await getShipmentConfig();
+
+        if (config.isTestMode) {
             return {
                 success: true,
                 data: {
@@ -163,7 +200,7 @@ export const generateAWB = async (shipmentId) => {
 
         const token = await getToken();
 
-        const res = await axios.post(`${SHIPMENT_BASE_URL}/courier/assign/awb`,
+        const res = await axios.post(`${config.baseUrl}/courier/assign/awb`,
             { shipment_id: shipmentId },
             { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -186,13 +223,15 @@ export const requestPickup = async (shipmentId) => {
             return { success: false, message: "Shipment Id is required!" };
         };
 
-        if (process.env.SHIPMENT_TEST_MODE === "true") {
+        const config = await getShipmentConfig();
+
+        if (config.isTestMode) {
             return { success: true, message: "" };
         };
 
         const token = await getToken();
 
-        const res = await axios.post(`${SHIPMENT_BASE_URL}/courier/generate/pickup`,
+        const res = await axios.post(`${config.baseUrl}/courier/generate/pickup`,
             { shipment_id: shipmentId },
             { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -262,7 +301,7 @@ export const cancelOrder = async (req, res) => {
     order.status = "cancelled";
     await order.save();
 
-    return res.status(400).json({ success: true, message: "Order cancel successfully" });
+    return res.status(200).json({ success: true, message: "Order cancel successfully" });
 };
 
 export const cancelShipment = async (awb) => {
@@ -272,7 +311,9 @@ export const cancelShipment = async (awb) => {
             return { success: false, message: "shipping awb required!" };
         };
 
-        if (process.env.SHIPMENT_TEST_MODE === "true") {
+        const config = await getShipmentConfig();
+
+        if (config.isTestMode) {
             return { success: true, message: "Shipment cancelled successfully" };
         };
 
@@ -284,7 +325,7 @@ export const cancelShipment = async (awb) => {
         };
 
         const response = await axios.post(
-            `${process.env.SHIPMENT_BASE_URL}/orders/cancel/shipment/awbs`,
+            `${config.baseUrl}/orders/cancel/shipment/awbs`,
             { awbs: [awb] },
             { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -301,5 +342,103 @@ export const cancelShipment = async (awb) => {
     } catch (error) {
         console.error("cancelShipment error------->", error.response?.data || error.message);
         return { success: false, message: error.response?.data?.message || error.message };
+    };
+};
+
+export const calculateShippingRate = async (req, res) => {
+    try {
+        const { items, pincode } = req.body;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, message: "Cart items are required" });
+        };
+
+        const setting = await settingModel.findOne({});
+        const freeShippingThreshold = setting?.freeShippingThreshold || 0;
+        const defaultShippingCharge = setting?.defaultShippingCharge || 0;
+
+        const productIds = items.map(item => item._id || item.id).filter(Boolean);
+        const products = await productModel.find({ _id: { $in: productIds } });
+        const productMap = {};
+        products.forEach(p => { productMap[p._id.toString()] = p; });
+
+        let totalWeight = 0;
+        let totalAmount = 0;
+        let allFreeShipping = items.length > 0;
+        let totalShippingCharge = 0;
+        let hasCustomCharge = false;
+
+        items.forEach(item => {
+            const pid = item._id || item.id;
+            const product = productMap[pid];
+            const quantity = item.quantity || 1;
+            const price = item.price || 0;
+
+            totalAmount += price * quantity;
+
+            if (product) {
+                totalWeight += (product.weight || 0) * quantity;
+                if (!product.freeShipping) {
+                    allFreeShipping = false;
+                };
+                if (product.shippingCharge > 0) {
+                    hasCustomCharge = true;
+                    totalShippingCharge += product.shippingCharge * quantity;
+                };
+            } else {
+                allFreeShipping = false;
+            };
+        });
+
+        // Free shipping if all products have freeShipping flag
+        if (allFreeShipping) {
+            return res.status(200).json({
+                success: true,
+                shipping: 0,
+                freeShipping: true,
+                method: "Free Shipping",
+                message: "All items have free shipping",
+            });
+        };
+
+        // Free shipping if total exceeds threshold
+        if (freeShippingThreshold > 0 && totalAmount >= freeShippingThreshold) {
+            return res.status(200).json({
+                success: true,
+                shipping: 0,
+                freeShipping: true,
+                method: "Free Shipping",
+                threshold: freeShippingThreshold,
+                message: `Free shipping on orders above ${freeShippingThreshold}`,
+            });
+        };
+
+        // Use product-level shipping charges if set
+        if (hasCustomCharge) {
+            return res.status(200).json({
+                success: true,
+                shipping: totalShippingCharge,
+                freeShipping: false,
+                method: "Standard Shipping",
+                totalWeight,
+                message: `Shipping charge calculated from product rates`,
+            });
+        };
+
+        // Otherwise use default shipping charge
+        return res.status(200).json({
+            success: true,
+            shipping: defaultShippingCharge,
+            freeShipping: false,
+            method: "Standard Shipping",
+            totalWeight,
+            defaultCharge: true,
+            message: defaultShippingCharge > 0
+                ? `Standard shipping charge applied`
+                : "Free shipping",
+        });
+    } catch (error) {
+        console.error("calculateShippingRate Error:", error);
+        return res.status(400).json({ success: false, message: error.message });
     };
 };

@@ -1,9 +1,14 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
 const avatarStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "./public/temp/"); // Temporary storage before Cloudinary upload
+        const dir = "./public/temp/";
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir); // Temporary storage before Cloudinary upload
     },
     filename: function (req, file, cb) {
         // Generate unique filename with timestamp

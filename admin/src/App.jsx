@@ -18,11 +18,14 @@ import Categories from "./pages/Categories";
 import Brands from "./pages/Brands";
 import Contacts from "./pages/Contacts";
 import Ratings from "./pages/Ratings";
+import CustomDesigns from "./pages/CustomDesigns";
 import Invoice from "./pages/Invoice";
 import ApiDocumentation from "./pages/ApiDocumentation";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Settings from "./pages/Settings";
+import Pages from "./pages/Pages";
+import FooterSettings from "./pages/FooterSettings";
 
 function App() {
     const { token } = useSelector((state) => state.auth);
@@ -79,6 +82,8 @@ function App() {
                                                     <Route path="/videos" element={<Videos token={token} />} />
                                                     <Route path="/users" element={<Users token={token} />} />
                                                     <Route path="/settings" element={<Settings token={token} />} />
+                                            <Route path="/pages" element={<Pages />} />
+                                            <Route path="/footer" element={<FooterSettings />} />
                                                 </>
                                             )}
                                             <Route path="/inventory" element={<Inventory />} />
@@ -86,6 +91,7 @@ function App() {
                                             <Route path="/brands" element={<Brands />} />
                                             <Route path="/contacts" element={<Contacts />} />
                                             <Route path="/ratings" element={<Ratings />} />
+                                            <Route path="/custom-designs" element={<CustomDesigns />} />
                                             <Route path="/invoice" element={<Invoice />} />
                                             <Route path="/api-docs" element={<ApiDocumentation />} />
                                         </Routes>

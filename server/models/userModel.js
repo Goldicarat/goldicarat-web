@@ -36,6 +36,8 @@ const userSchema = new mongoose.Schema(
         isActive: { type: Boolean, default: true },
         lastLogin: { type: Date },
         avatar: { type: String, default: "" },
+        resetPasswordToken: { type: String, default: null },
+        resetPasswordExpire: { type: Date, default: null },
     },
     {
         minimize: false,

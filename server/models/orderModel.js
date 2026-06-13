@@ -58,11 +58,22 @@ const orderSchema = new mongoose.Schema({
             image: {
                 type: String,
             },
+            selectedKarat: {
+                type: String,
+            },
         },
     ],
     amount: {
         type: Number,
         required: true,
+    },
+    shippingCost: {
+        type: Number,
+        default: 0,
+    },
+    paymentInfo: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {},
     },
     discountAmount: {
         type: Number,

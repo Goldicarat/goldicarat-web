@@ -17,10 +17,12 @@ import {
     FaEnvelope,
     FaStar,
     FaVideo,
+    FaPaintBrush,
 } from "react-icons/fa";
 import { MdDashboard, MdAnalytics, MdInventory } from "react-icons/md";
 import { BiPackage } from "react-icons/bi";
 import { HiOutlineClipboardList } from "react-icons/hi";
+import { FaGlobe, FaShoePrints } from "react-icons/fa";
 
 const Sidebar = () => {
     const dispatch = useDispatch();
@@ -134,6 +136,27 @@ const Sidebar = () => {
             icon: <FaStar />,
             path: "/ratings",
             description: "Customer ratings & feedback",
+            badge: null,
+        },
+        {
+            title: "Custom Designs",
+            icon: <FaPaintBrush />,
+            path: "/custom-designs",
+            description: "Custom jewelry design requests",
+            badge: null,
+        },
+        {
+            title: "Pages",
+            icon: <FaGlobe />,
+            path: "/pages",
+            description: "Manage dynamic pages & FAQ",
+            badge: null,
+        },
+        {
+            title: "Footer",
+            icon: <FaShoePrints />,
+            path: "/footer",
+            description: "Manage footer links & social icons",
             badge: null,
         },
         // {

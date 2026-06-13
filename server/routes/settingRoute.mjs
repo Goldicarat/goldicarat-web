@@ -6,6 +6,9 @@ import {
     changePassword,
     updateDiscountedPercentage,
     updateSetting,
+    updateSiteSettings,
+    updateFooterLinks,
+    updatePaymentShipmentSettings,
 } from "../controllers/adminSettingController.mjs";
 import adminAuth from "../middleware/adminAuth.js";
 
@@ -22,5 +25,8 @@ router.get(`${routeValue}single-details`, getSingleSettingDetails);
 router.put(`${routeValue}change-password`, adminAuth, changePassword);
 router.put(`${routeValue}update-discounted-percentage`, adminAuth, updateDiscountedPercentage);
 router.put(`${routeValue}update-setting`, adminAuth, updateSetting);
+router.put(`${routeValue}update-site-settings`, adminAuth, updateSiteSettings);
+router.put(`${routeValue}update-footer-links`, adminAuth, updateFooterLinks);
+router.put(`${routeValue}update-payment-shipment-settings`, adminAuth, updatePaymentShipmentSettings);
 
 export default router;

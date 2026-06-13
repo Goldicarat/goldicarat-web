@@ -36,11 +36,34 @@ const getDashboardStats = async (req, res) => {
             .sort({ date: -1 })
             .limit(5);
 
-        // Get top products (you can enhance this with actual sales data)
-        const topProducts = await productModel
-            .find({})
-            .sort({ createdAt: -1 })
-            .limit(5);
+        // Get top products by likes
+        const topProducts = await productModel.aggregate([
+            {
+                $addFields: {
+                    likeCount: { $size: { $ifNull: ["$likes", []] } },
+                },
+            },
+            { $sort: { likeCount: -1 } },
+            { $limit: 5 },
+            {
+                $project: {
+                    name: 1,
+                    price: 1,
+                    mrp: 1,
+                    category: 1,
+                    images: 1,
+                    likeCount: 1,
+                    stock: 1,
+                    createdAt: 1,
+                },
+            },
+        ]);
+
+        // Transform topProducts to include image field
+        const topProductsFormatted = topProducts.map((p) => ({
+            ...p,
+            image: p.images && p.images.length > 0 ? p.images[0] : "",
+        }));
 
         // Get orders by status
         const ordersByStatus = await orderModel.aggregate([
@@ -66,7 +89,7 @@ const getDashboardStats = async (req, res) => {
             totalUsers,
             totalRevenue,
             recentOrders,
-            topProducts,
+            topProducts: topProductsFormatted,
             recentUsers,
             ordersByStatus,
             growth: {

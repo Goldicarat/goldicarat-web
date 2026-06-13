@@ -1,24 +1,74 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Filter, Grid, List, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
-import { products, categories, diamondShapes } from '../data/products'
+import { categories, diamondShapes } from '../data/products'
+import { fetchProducts } from '../api/productService'
+import { getPages } from '../api/pageService'
+import StaticFAQ from '../components/StaticFAQ'
 
 export default function Shop() {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedShape, setSelectedShape] = useState('all')
   const [selectedMetal, setSelectedMetal] = useState('all')
   const [sortBy, setSortBy] = useState('featured')
   const [viewMode, setViewMode] = useState('grid')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
 
   const metals = ['All', 'Yellow Gold', 'White Gold', 'Rose Gold', 'Platinum']
-  
-  const filteredProducts = products.filter(product => {
-    if (selectedCategory !== 'all' && product.category !== selectedCategory) return false
-    if (selectedShape !== 'all' && product.shape.toLowerCase() !== selectedShape) return false
-    if (selectedMetal !== 'all' && product.metal !== selectedMetal) return false
-    return true
-  })
+  const [shopFaqs, setShopFaqs] = useState([])
+
+  useEffect(() => {
+    getPages().then((data) => {
+      if (data?.success) {
+        const allPages = data.pages || []
+        const faqPages = allPages.filter((p) => p.type === 'faq' && p.isActive)
+        const faqs = faqPages.flatMap((page) =>
+          (page.faqs || []).map((faq) => ({
+            ...faq,
+            category: page.title,
+            _key: `${page._id}_${faq._id || faq.order || Math.random()}`,
+          }))
+        )
+        setShopFaqs(faqs)
+      }
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadProducts = async () => {
+      try {
+        setLoading(true)
+        const params = { _page: currentPage, _perPage: 12 }
+        if (selectedCategory !== 'all') params.category = selectedCategory
+        if (selectedShape !== 'all') params.shape = selectedShape
+        if (selectedMetal !== 'all') params.metal = selectedMetal
+        if (sortBy === 'price-low') params._sort = 'price'
+        if (sortBy === 'price-high') params._sort = '-price'
+
+        const data = await fetchProducts(params)
+        if (cancelled) return
+        if (data?.success) {
+          setProducts(data.products || [])
+          setTotalPages(data.totalPages || 1)
+          setTotalItems(data.totalItems || 0)
+        }
+      } catch (err) {
+        if (cancelled) return
+        console.error('Error loading products:', err)
+        setProducts([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadProducts()
+    return () => { cancelled = true }
+  }, [selectedCategory, selectedShape, selectedMetal, sortBy, currentPage])
 
   const sortOptions = [
     { value: 'featured', label: 'Featured' },
@@ -158,9 +208,9 @@ export default function Shop() {
                   >
                     <Filter className="w-4 h-4" /> Filters
                   </button>
-                  <p className="text-gray-600">
-                    Showing <span className="font-medium">{filteredProducts.length}</span> products
-                  </p>
+                    <p className="text-gray-600">
+                      Showing <span className="font-medium">{totalItems}</span> products
+                    </p>
                 </div>
                 
                 <div className="flex items-center gap-4">
@@ -198,7 +248,24 @@ export default function Shop() {
               </div>
             </div>
 
-            {filteredProducts.length === 0 ? (
+            {loading ? (
+              <div className={`grid gap-6 ${
+                viewMode === 'grid' 
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                  : 'grid-cols-1'
+              }`}>
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100 animate-pulse">
+                    <div className="aspect-square bg-gray-200"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : products.length === 0 ? (
               <div className="bg-white rounded-xl p-16 text-center">
                 <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
                 <button 
@@ -218,25 +285,45 @@ export default function Shop() {
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
                   : 'grid-cols-1'
               }`}>
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
                 ))}
               </div>
             )}
 
-            <div className="mt-8 flex justify-center">
-              <div className="flex gap-2">
-                <button className="w-10 h-10 rounded-lg border border-gray-300 hover:bg-gold-50 hover:border-gold-500 transition-colors">1</button>
-                <button className="w-10 h-10 rounded-lg border border-gray-300 hover:bg-gold-50 hover:border-gold-500 transition-colors">2</button>
-                <button className="w-10 h-10 rounded-lg border border-gray-300 hover:bg-gold-50 hover:border-gold-500 transition-colors">3</button>
-                <button className="w-10 h-10 rounded-lg border border-gray-300 hover:bg-gold-50 hover:border-gold-500 transition-colors">
-                  <span className="sr-only">Next</span>&raquo;
-                </button>
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 rounded-lg border transition-colors ${
+                        currentPage === page
+                          ? 'bg-gold-500 text-white border-gold-500'
+                          : 'border-gray-300 hover:bg-gold-50 hover:border-gold-500'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </main>
         </div>
       </div>
+
+      {shopFaqs.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 mt-16 mb-12">
+          <StaticFAQ
+            faqs={shopFaqs}
+            title="Shopping FAQs"
+            description="Common questions about our products and shopping experience"
+            grouped
+          />
+        </div>
+      )}
     </div>
   )
 }

@@ -322,11 +322,11 @@ const Home = () => {
                     </div>
                 </div>
 
-                {/* Top Products */}
+                {/* Most Liked Products */}
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-bold text-gray-800">
-                            Popular Products
+                            Most Liked Products
                         </h3>
                         <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                             <NavLink to="/list" className="font-semibold">
@@ -342,11 +342,24 @@ const Home = () => {
                                     key={index}
                                     className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
                                 >
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold ${
+                                        index === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                                        index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' :
+                                        index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-700' :
+                                        'bg-gradient-to-br from-blue-400 to-purple-500'
+                                    }`}>
                                         {index + 1}
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-gray-800">
+                                    <div className="flex-shrink-0">
+                                        <img
+                                            src={product.image || product.images?.[0] || ''}
+                                            alt={product.name}
+                                            className="w-12 h-12 rounded-lg object-cover"
+                                            onError={(e) => { e.target.style.display = 'none' }}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-gray-800 truncate">
                                             {product.name || "Product Name"}
                                         </p>
                                         <p className="text-sm text-gray-600">
@@ -354,11 +367,12 @@ const Home = () => {
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-gray-800">
-                                            {formatCurrency(product.price || 0)}
-                                        </p>
+                                        <div className="flex items-center gap-1 text-red-500 font-bold">
+                                            <span>♥</span>
+                                            <span>{product.likeCount || 0}</span>
+                                        </div>
                                         <p className="text-sm text-gray-600">
-                                            Stock: {product.stock || 0}
+                                            {formatCurrency(product.price || 0)}
                                         </p>
                                     </div>
                                 </div>

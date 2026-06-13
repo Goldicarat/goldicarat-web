@@ -22,26 +22,40 @@ const addProduct = async (req, res) => {
             _type,
             name,
             mrp,
-            price,
             discountedPercentage,
             stock,
             category,
-            // brand,
+            shape,
+            metal,
             badge,
             isAvailable,
             offer,
             description,
             tags,
+            weight,
+            freeShipping,
+            shippingCharge,
+            goldKarat,
+            price14k,
+            price18k,
+            price22k,
+            price24k,
         } = req.body;
         const image1 = req.files.image1 && req.files.image1[0];
         const image2 = req.files.image2 && req.files.image2[0];
         const image3 = req.files.image3 && req.files.image3[0];
         const image4 = req.files.image4 && req.files.image4[0];
 
-        if (!name || !mrp || !price || !category || !description) {
+        if (!name || !mrp || !category || !description) {
             return res.status(400).json({
                 success: false,
-                message: "Missing required fields: name, mrp, price, category, and description are mandatory.",
+                message: "Missing required fields: name, mrp, category, and description are mandatory.",
+            });
+        };
+        if (!price14k && !price18k && !price22k && !price24k) {
+            return res.status(400).json({
+                success: false,
+                message: "At least one gold karat price (14k, 18k, 22k, or 24k) is required.",
             });
         };
 
@@ -76,24 +90,35 @@ const addProduct = async (req, res) => {
             parsedTags = tags ? tags.split(",").map((tag) => tag.trim()) : [];
         };
 
-        const discountPercentage = calculateDiscountedPercentage(Number(mrp), Number(price));
+        const defaultPrice = Number(price14k || price18k || price22k || price24k || 0);
+        const discountPercentage = calculateDiscountedPercentage(Number(mrp), defaultPrice);
 
         const productData = {
             _type: _type ? _type : "",
             name,
             mrp: Number(mrp),
-            price: Number(price),
+            price: defaultPrice,
+            price14k: Number(price14k || 0),
+            price18k: Number(price18k || 0),
+            price22k: Number(price22k || 0),
+            price24k: Number(price24k || 0),
             discountedPercentage: discountPercentage ? Number(discountPercentage) : 0,
             stock: stock ? Number(stock) : 0,
             soldQuantity: 0,
             category,
             // brand: brand ? brand : "",
-            badge: badge === "true" ? true : false,
+            shape: shape || "",
+            metal: metal || "",
+            badge: badge || "",
             isAvailable: isAvailable === "true" ? true : false,
             offer: offer === "true" ? true : false,
             description,
             tags: tags ? parsedTags : [],
             images: imagesUrl,
+            weight: weight ? Number(weight) : 0,
+            freeShipping: freeShipping === "true" ? true : false,
+            shippingCharge: shippingCharge ? Number(shippingCharge) : 0,
+            goldKarat: goldKarat || "",
         };
 
         const product = new productModel(productData);
@@ -117,6 +142,8 @@ const listProducts = async (req, res) => {
             _search,
             brand,
             category,
+            shape,
+            metal,
             offer,
             onSale,
             isAvailable,
@@ -154,6 +181,14 @@ const listProducts = async (req, res) => {
 
         if (category) {
             filter.category = category;
+        };
+
+        if (shape) {
+            filter.shape = { $regex: shape, $options: "i" };
+        };
+
+        if (metal) {
+            filter.metal = { $regex: metal, $options: "i" };
         };
 
         if (offer === "true") {
@@ -205,6 +240,7 @@ const listProducts = async (req, res) => {
                 image: product.images && product.images.length > 0 ? product.images[0] : "",
                 averageRating: ratingData.averageRating,
                 totalRatings: ratingData.totalRatings,
+                likeCount: product.likes ? product.likes.length : 0,
             };
         });
 
@@ -314,12 +350,66 @@ const singleProducts = async (req, res) => {
             totalRatings: 0,
         };
 
-        product["averageRating"] = ratingData.averageRating;
-        product["totalRatings"] = ratingData.totalRatings;
+        const productObj = product.toObject();
+        productObj["averageRating"] = ratingData.averageRating;
+        productObj["totalRatings"] = ratingData.totalRatings;
+        productObj["likeCount"] = product.likes ? product.likes.length : 0;
 
-        return res.status(200).json({ success: true, product: product });
+        // If user is authenticated, return whether they liked this product
+        if (req.user) {
+            productObj["isLiked"] = product.likes ? product.likes.some((id) => id.toString() === req.user._id.toString()) : false;
+        };
+
+        return res.status(200).json({ success: true, product: productObj });
     } catch (error) {
         console.error("Single product error:", error);
+        return res.status(400).json({ success: false, message: error.message });
+    };
+};
+
+// Toggle like/dislike on a product
+const toggleProductLike = async (req, res) => {
+    try {
+        const { productId } = req.body;
+        const userId = req.user._id;
+
+        if (!productId) {
+            return res.status(400).json({
+                success: false,
+                message: "Product ID is required",
+            });
+        };
+
+        const product = await productModel.findById(productId);
+        if (!product) {
+            return res.status(400).json({
+                success: false,
+                message: "Product not found",
+            });
+        };
+
+        const userIdStr = userId.toString();
+        const likedIndex = product.likes ? product.likes.findIndex((id) => id.toString() === userIdStr) : -1;
+
+        if (likedIndex > -1) {
+            product.likes.splice(likedIndex, 1);
+        } else {
+            if (!product.likes) product.likes = [];
+            product.likes.push(userId);
+        };
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: likedIndex > -1 ? "Product disliked" : "Product liked",
+            data: {
+                isLiked: likedIndex === -1,
+                likeCount: product.likes.length,
+            },
+        });
+    } catch (error) {
+        console.error("Toggle like error:", error);
         return res.status(400).json({ success: false, message: error.message });
     };
 };
@@ -384,16 +474,24 @@ const updateProduct = async (req, res) => {
             _type,
             name,
             mrp,
-            price,
             discountedPercentage,
             stock,
             category,
-            // brand,
+            shape,
+            metal,
             badge,
             isAvailable,
             offer,
             description,
             tags,
+            weight,
+            freeShipping,
+            shippingCharge,
+            goldKarat,
+            price14k,
+            price18k,
+            price22k,
+            price24k,
         } = req.body;
 
         const image1 = req.files?.image1 && req.files.image1[0];
@@ -409,10 +507,10 @@ const updateProduct = async (req, res) => {
             });
         };
 
-        if (!name || !mrp || !price || !category || !description) {
+        if (!name || !mrp || !category || !description) {
             return res.status(400).json({
                 success: false,
-                message: "Missing required fields: name, mrp, price, category, and description are mandatory.",
+                message: "Missing required fields: name, mrp, category, and description are mandatory.",
             });
         };
 
@@ -465,23 +563,34 @@ const updateProduct = async (req, res) => {
             parsedTags = tags ? tags.split(",").map((tag) => tag.trim()) : [];
         };
 
-        const discountPercentage = calculateDiscountedPercentage(Number(mrp), Number(price));
+        const defaultPrice = Number(price14k || price18k || price22k || price24k || existingProduct.price || 0);
+        const discountPercentage = calculateDiscountedPercentage(Number(mrp), defaultPrice);
 
         const updateData = {
             _type: _type || "",
             name,
             mrp: Number(mrp),
-            price: Number(price),
+            price: defaultPrice,
+            price14k: Number(price14k || 0),
+            price18k: Number(price18k || 0),
+            price22k: Number(price22k || 0),
+            price24k: Number(price24k || 0),
             discountedPercentage: discountPercentage ? Number(discountPercentage) : 0,
             stock: stock ? Number(stock) : 0,
             category,
             // brand: brand || "",
-            badge: badge === "true" ? true : false,
+            shape: shape || "",
+            metal: metal || "",
+            badge: badge || "",
             isAvailable: isAvailable === "true" ? true : false,
             offer: offer === "true" ? true : false,
             description,
             tags: parsedTags,
             images: imagesUrl,
+            weight: weight ? Number(weight) : 0,
+            freeShipping: freeShipping === "true" ? true : false,
+            shippingCharge: shippingCharge ? Number(shippingCharge) : 0,
+            goldKarat: goldKarat || "",
         };
 
         const updatedProduct = await productModel.findByIdAndUpdate(
@@ -501,6 +610,70 @@ const updateProduct = async (req, res) => {
     };
 };
 
+// Bulk import products from JSON data (e.g. from products.js)
+const bulkImport = async (req, res) => {
+    try {
+        const { products } = req.body;
+
+        if (!products || !Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a non-empty array of products",
+            });
+        }
+
+        const results = { imported: 0, skipped: 0, errors: [] };
+
+        for (const item of products) {
+            try {
+                if (!item.name || !item.price || !item.category) {
+                    results.skipped++;
+                    results.errors.push({ name: item.name || "unnamed", reason: "Missing required fields (name, price, category)" });
+                    continue;
+                }
+
+                const discountPct = item.originalPrice
+                    ? calculateDiscountedPercentage(Number(item.originalPrice), Number(item.price))
+                    : 0;
+
+                const productData = {
+                    _type: item._type || "best_sellers",
+                    name: item.name,
+                    description: item.description || "",
+                    mrp: Number(item.originalPrice || item.price),
+                    price: Number(item.price),
+                    discountedPercentage: discountPct,
+                    stock: item.stock || 100,
+                    soldQuantity: 0,
+                    category: item.category.toLowerCase(),
+                    shape: item.shape || "",
+                    metal: item.metal || "",
+                    badge: item.badge || "",
+                    isAvailable: true,
+                    offer: !!item.badge,
+                    images: item.image ? [item.image] : [],
+                    tags: [item.category, item.shape, item.metal].filter(Boolean),
+                };
+
+                await productModel(productData).save();
+                results.imported++;
+            } catch (err) {
+                results.skipped++;
+                results.errors.push({ name: item.name || "unnamed", reason: err.message });
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Imported ${results.imported} product(s). ${results.skipped} skipped.`,
+            results,
+        });
+    } catch (error) {
+        console.error("Bulk import error:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export {
     addProduct,
     listProducts,
@@ -508,4 +681,6 @@ export {
     singleProducts,
     updateStock,
     updateProduct,
+    toggleProductLike,
+    bulkImport,
 };

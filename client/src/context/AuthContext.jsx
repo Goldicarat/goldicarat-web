@@ -1,23 +1,72 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { loginUser as apiLogin } from '../api/authService'
+import { getUserProfile } from '../api/userService'
 
 const AuthContext = createContext()
 
+function loadUser() {
+  try {
+    const stored = localStorage.getItem("user")
+    return stored ? JSON.parse(stored) : null
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(loadUser)
+  const [token, setToken] = useState(localStorage.getItem("token") || null)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
 
-  const login = (email, password) => {
-    setUser({ email, name: email.split('@')[0] })
-    return true
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token)
+    } else {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+    }
+  }, [token])
+
+  useEffect(() => {
+    localStorage.setItem("user", JSON.stringify(user))
+  }, [user])
+
+  useEffect(() => {
+    if (token && !user) {
+      getUserProfile()
+        .then(data => {
+          if (data?.success) {
+            setUser(data.user || data.profile)
+          } else {
+            setToken(null)
+          }
+        })
+        .catch(() => setToken(null))
+    }
+  }, [])
+
+  const login = async (email, password) => {
+    try {
+      const data = await apiLogin(email, password)
+      if (data?.success) {
+        setUser(data.user || { email })
+        setToken(data.token)
+        return true
+      }
+      throw new Error(data?.message || "Login failed")
+    } catch (err) {
+      throw err
+    }
   }
 
   const logout = () => {
     setUser(null)
+    setToken(null)
   }
 
   const isLoggedIn = () => {
-    return user !== null
+    return !!token && !!user
   }
 
   const requireAuth = (action) => {
@@ -34,8 +83,9 @@ export function AuthProvider({ children }) {
     setPendingAction(null)
   }
 
-  const completeAuth = (userData) => {
+  const completeAuth = (userData, authToken) => {
     setUser(userData)
+    if (authToken) setToken(authToken)
     setIsAuthModalOpen(false)
     if (pendingAction) {
       pendingAction()
@@ -43,12 +93,18 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const updateUser = (userData) => {
+    setUser(prev => ({ ...prev, ...userData }))
+  }
+
   return (
     <AuthContext.Provider value={{
       user,
+      token,
       isLoggedIn,
       login,
       logout,
+      updateUser,
       requireAuth,
       isAuthModalOpen,
       setIsAuthModalOpen,

@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { X, Eye, EyeOff, User, Mail, Lock, ArrowRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { loginUser, registerUser } from '../api/authService'
 
 export default function AuthModal() {
-  const { isAuthModalOpen, closeAuthModal, completeAuth, login } = useAuth()
+  const { isAuthModalOpen, closeAuthModal, completeAuth } = useAuth()
+  const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -14,6 +18,7 @@ export default function AuthModal() {
   })
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
+  const [serverError, setServerError] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -21,6 +26,7 @@ export default function AuthModal() {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
+    if (serverError) setServerError('')
   }
 
   const validate = () => {
@@ -57,16 +63,32 @@ export default function AuthModal() {
     if (!validate()) return
     
     setIsLoading(true)
+    setServerError('')
     
-    setTimeout(() => {
-      const userData = {
-        email: formData.email,
-        name: isLogin ? formData.email.split('@')[0] : formData.name
+    try {
+      let data
+      if (isLogin) {
+        data = await loginUser(formData.email, formData.password)
+      } else {
+        data = await registerUser(formData.name, formData.email, formData.password)
       }
-      completeAuth(userData)
-      setFormData({ name: '', email: '', password: '', confirmPassword: '' })
+      
+      if (data?.success) {
+        toast.success(isLogin ? 'Welcome back! Logged in successfully' : 'Account created successfully')
+        completeAuth(data.user || { email: formData.email, name: formData.name }, data.token)
+        setFormData({ name: '', email: '', password: '', confirmPassword: '' })
+      } else {
+        const msg = data?.message || 'Authentication failed'
+        setServerError(msg)
+        toast.error(msg)
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || 'Something went wrong'
+      setServerError(msg)
+      toast.error(msg)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const switchMode = () => {
@@ -192,9 +214,19 @@ export default function AuthModal() {
 
             {isLogin && (
               <div className="text-right">
-                <a href="#" className="text-sm text-gold-600 hover:text-gold-700">
+                <button
+                  type="button"
+                  onClick={() => { closeAuthModal(); navigate('/forgot-password') }}
+                  className="text-sm text-gold-600 hover:text-gold-700"
+                >
                   Forgot password?
-                </a>
+                </button>
+              </div>
+            )}
+
+            {serverError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {serverError}
               </div>
             )}
 
@@ -226,7 +258,7 @@ export default function AuthModal() {
             </p>
           </div>
 
-          <div className="mt-6">
+          {/* <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -246,14 +278,8 @@ export default function AuthModal() {
                 </svg>
                 Google
               </button>
-              {/* <button className="flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
-                </svg>
-                GitHub
-              </button> */}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

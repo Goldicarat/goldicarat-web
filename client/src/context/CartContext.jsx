@@ -1,24 +1,44 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 const CartContext = createContext()
 
+const CART_STORAGE_KEY = 'goldicarat_cart'
+
+const loadCartFromStorage = () => {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY)
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([])
+  const [cartItems, setCartItems] = useState(loadCartFromStorage)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
-  const addToCart = (product, quantity = 1, selectedMetal = '', selectedSize = '') => {
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
+  }, [cartItems])
+
+  const getProductId = (product) => product._id || product.id
+
+  const addToCart = (product, quantity = 1, selectedMetal = '', selectedSize = '', selectedKarat = '') => {
+    const pid = getProductId(product)
     setCartItems(prevItems => {
       const existingItem = prevItems.find(
-        item => item.id === product.id && 
+        item => getProductId(item) === pid && 
                item.selectedMetal === selectedMetal && 
-               item.selectedSize === selectedSize
+               item.selectedSize === selectedSize &&
+               item.selectedKarat === selectedKarat
       )
 
       if (existingItem) {
         return prevItems.map(item =>
-          item.id === product.id && 
+          getProductId(item) === pid && 
           item.selectedMetal === selectedMetal && 
-          item.selectedSize === selectedSize
+          item.selectedSize === selectedSize &&
+          item.selectedKarat === selectedKarat
             ? { ...item, quantity: item.quantity + quantity }
             : item
         )
@@ -26,32 +46,36 @@ export function CartProvider({ children }) {
 
       return [...prevItems, {
         ...product,
+        id: pid,
         quantity,
         selectedMetal: selectedMetal || product.metal,
-        selectedSize: selectedSize || 'M'
+        selectedSize: selectedSize || 'M',
+        selectedKarat: selectedKarat || product.goldKarat || '',
       }]
     })
     setIsCartOpen(true)
   }
 
-  const removeFromCart = (productId, selectedMetal = '', selectedSize = '') => {
+  const removeFromCart = (productId, selectedMetal = '', selectedSize = '', selectedKarat = '') => {
     setCartItems(prevItems => prevItems.filter(
-      item => !(item.id === productId && 
+      item => !(getProductId(item) === productId && 
                item.selectedMetal === selectedMetal && 
-               item.selectedSize === selectedSize)
+               item.selectedSize === selectedSize &&
+               item.selectedKarat === selectedKarat)
     ))
   }
 
-  const updateQuantity = (productId, quantity, selectedMetal = '', selectedSize = '') => {
+  const updateQuantity = (productId, quantity, selectedMetal = '', selectedSize = '', selectedKarat = '') => {
     if (quantity <= 0) {
-      removeFromCart(productId, selectedMetal, selectedSize)
+      removeFromCart(productId, selectedMetal, selectedSize, selectedKarat)
       return
     }
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.id === productId && 
+        getProductId(item) === productId && 
         item.selectedMetal === selectedMetal && 
-        item.selectedSize === selectedSize
+        item.selectedSize === selectedSize &&
+        item.selectedKarat === selectedKarat
           ? { ...item, quantity }
           : item
       )

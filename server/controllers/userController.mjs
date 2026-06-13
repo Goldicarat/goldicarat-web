@@ -1,8 +1,10 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import userModel from "../models/userModel.js";
 import { cloudinary, deleteCloudinaryImage } from "../config/cloudinary.js";
+import { sendPasswordResetEmail } from "../config/email.js";
 import fs from "fs";
 
 // Helper function to clean up temporary files
@@ -57,6 +59,7 @@ const userLogin = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    avatar: user.avatar || "",
                 },
                 message: "User logged in successfully",
             });
@@ -131,6 +134,7 @@ const userRegister = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar || "",
             },
             message: "User registered successfully!",
         });
@@ -173,6 +177,7 @@ const adminLogin = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    avatar: user.avatar || "",
                 },
                 message: "Welcome admin",
             });
@@ -855,6 +860,101 @@ const clearCart = async (req, res) => {
     }
 };
 
+// Forgot password - sends reset link to email
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Please provide your email address" });
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid email address" });
+        }
+
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ success: false, message: "No account found with this email address" });
+        }
+
+        if (!user.isActive) {
+            return res.status(400).json({ success: false, message: "Account is deactivated. Please contact support." });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save();
+
+        const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+        const emailSent = await sendPasswordResetEmail(user.email, resetUrl);
+
+        if (!emailSent) {
+            user.resetPasswordToken = null;
+            user.resetPasswordExpire = null;
+            await user.save();
+            return res.status(500).json({ success: false, message: "Failed to send reset email. Please try again later." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset link sent to your email successfully",
+        });
+    } catch (error) {
+        console.error("Forgot Password Error", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Reset password with token
+const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+
+        if (!token) {
+            return res.status(400).json({ success: false, message: "Invalid reset link" });
+        }
+
+        if (!password) {
+            return res.status(400).json({ success: false, message: "Please enter a new password" });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+        }
+
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await userModel.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: new Date() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired reset link. Please request a new one." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+        user.resetPasswordToken = null;
+        user.resetPasswordExpire = null;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successfully. You can now login with your new password.",
+        });
+    } catch (error) {
+        console.error("Reset Password Error", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Create admin user (only accessible by existing admins)
 const createAdmin = async (req, res) => {
     try {
@@ -916,6 +1016,8 @@ export {
     getUserProfile,
     updateUserProfile,
     changeUserPassword,
+    forgotPassword,
+    resetPassword,
     addToCart,
     updateCart,
     getUserCart,
