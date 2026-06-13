@@ -42,8 +42,8 @@ export default function Contact() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Call Us</h3>
             <p className="text-gray-600 mb-4">Mon-Sat: 9am - 6pm GMT</p>
-            <a href="tel:+447757208197" className="text-gold-600 font-medium hover:text-gold-700">
-              +44 7757208197
+            <a href="tel:+917434004764" className="text-gold-600 font-medium hover:text-gold-700">
+              +91 7434004764
             </a>
           </div>
 
@@ -53,8 +53,8 @@ export default function Contact() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Email Us</h3>
             <p className="text-gray-600 mb-4">We reply within 24 hours</p>
-            <a href="mailto:care@goldicarat.com" className="text-gold-600 font-medium hover:text-gold-700">
-              care@goldicarat.com
+            <a href="mailto:goldicarat@gmail.com" className="text-gold-600 font-medium hover:text-gold-700">
+              goldicarat@gmail.com
             </a>
           </div>
 
@@ -107,7 +107,7 @@ export default function Contact() {
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500"
-                    placeholder="+44 123 456 7890"
+                    placeholder="+91 123 456 7890"
                   />
                 </div>
                 <div>
