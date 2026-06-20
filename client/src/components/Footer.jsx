@@ -154,11 +154,11 @@ export default function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-gold-500 flex-shrink-0 mt-1" />
-                <span className="text-gray-400">123 Hatton Garden<br />London, EC1N 8UK</span>
+                <span className="text-gray-400">Mavani Shopping Center<br />Mangadh Chowk, Varachha Road <br />Mini Bazar, Surat, Gujarat.</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-gold-500" />
-                <a href="tel:+917434004764" className="text-gray-400 hover:text-gold-400 transition-colors">+91 7434004764</a>
+                <a href="tel:+917434080899" className="text-gray-400 hover:text-gold-400 transition-colors">+91 7434080899</a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-gold-500" />

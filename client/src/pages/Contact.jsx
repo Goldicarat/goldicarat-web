@@ -41,9 +41,9 @@ export default function Contact() {
               <Phone className="w-8 h-8 text-gold-500" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Call Us</h3>
-            <p className="text-gray-600 mb-4">Mon-Sat: 9am - 6pm GMT</p>
-            <a href="tel:+917434004764" className="text-gold-600 font-medium hover:text-gold-700">
-              +91 7434004764
+            <p className="text-gray-600 mb-4">Mon-Sat: 9am - 6pm IST</p>
+            <a href="tel:+917434080899" className="text-gold-600 font-medium hover:text-gold-700">
+              +91 7434080899
             </a>
           </div>
 
@@ -64,7 +64,7 @@ export default function Contact() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Visit Us</h3>
             <p className="text-gray-600 mb-4">By appointment only</p>
-            <p className="text-gray-900">123 Hatton Garden, London EC1N 8UK</p>
+            <p className="text-gray-900">Mavani Shopping Center<br />Mangadh Chowk, Varachha Road <br />Mini Bazar, Surat, Gujarat.</p>
           </div>
         </div>
 
@@ -201,7 +201,7 @@ export default function Contact() {
               <div className="mt-6 pt-6 border-t border-gold-500">
                 <div className="flex items-center gap-3 mb-3">
                   <Clock className="w-5 h-5" />
-                  <span className="font-medium">UK (GMT) Time</span>
+                  <span className="font-medium">India (IST) Time</span>
                 </div>
                 <p className="text-gold-100 text-sm">
                   * Appointments available outside hours upon request
@@ -213,7 +213,7 @@ export default function Contact() {
 
         <div className="mt-12 rounded-xl overflow-hidden shadow-lg h-80">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2482.4!2d-0.1087!3d51.52!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTHCsDMxJzEyLjAiTiAxwrAwNicwMC42IkU!5e0!3m2!1sen!2suk!4v1234567890"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3720.5!2d72.8511921!3d21.2113913!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04fe574f31fa3%3A0xd5428d7f06468324!2sMavani+Shopping+Center!5e0!3m2!1sen!2sin!4v1"
             width="100%"
             height="100%"
             style={{ border: 0 }}

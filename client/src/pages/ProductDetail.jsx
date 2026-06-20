@@ -426,7 +426,7 @@ export default function ProductDetail() {
               <div className="space-y-3 border-t pt-6">
                 <div className="flex items-center gap-3 text-sm">
                   <Truck className="w-5 h-5 text-green-500" />
-                  <span>Free UK Delivery</span>
+                  <span>All India Delivery</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <RotateCcw className="w-5 h-5 text-blue-500" />
@@ -442,12 +442,12 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-gold-50 rounded-lg">
+              {/* <div className="mt-6 p-4 bg-gold-50 rounded-lg">
                 <p className="text-sm text-gray-600">
                   <span className="font-semibold">Buy Now, Pay Later:</span> 0% APR available. 
                   Spread the cost over 3-12 months.
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

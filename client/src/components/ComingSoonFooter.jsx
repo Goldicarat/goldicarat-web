@@ -45,11 +45,11 @@ export default function ComingSoonFooter() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-gold-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-400">123 Hatton Garden<br />London, EC1N 8UK</span>
+                <span className="text-gray-400">Mavani Shopping Center<br />Mangadh Chowk, Varachha Road <br />Mini Bazar, Surat, Gujarat.</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-gold-500" />
-                <span className="text-gray-400">+91 7434004764</span>
+                <span className="text-gray-400">+91 7434080899</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gold-500" />

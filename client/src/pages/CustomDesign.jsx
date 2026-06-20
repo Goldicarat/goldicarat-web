@@ -517,7 +517,7 @@ export default function CustomDesign() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="btn-primary">Book Virtual Appointment</button>
-              <button className="btn-secondary">Call +91 7434004764</button>
+              <button className="btn-secondary">Call +91 7434080899</button>
             </div>
           </div>
         </div>

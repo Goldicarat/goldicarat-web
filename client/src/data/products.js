@@ -133,7 +133,7 @@ export const products = [
   {
     id: 11,
     name: "Men's Rose Gold Diamond Band Ring",
-    description: "Pave Set Diagonal Design | UK Made",
+    description: "Pave Set Diagonal Design | India Made",
     price: 6227,
     badge: "NEW",
     category: "rings",
@@ -208,7 +208,7 @@ export const blogPosts = [
 
 export const trustBadges = [
   { icon: "🏆", title: "Certified Diamonds", desc: "IGI & GIA Certified" },
-  { icon: "🚚", title: "Free Shipping", desc: "On all UK orders" },
+  { icon: "🚚", title: "Free Shipping", desc: "On all India orders" },
   { icon: "🔄", title: "15 Days Exchange", desc: "Hassle-free returns" },
   { icon: "💳", title: "Buy Now Pay Later", desc: "0% APR available" },
   { icon: "✂️", title: "Free Engraving", desc: "Personalize your piece" }
@@ -217,21 +217,21 @@ export const trustBadges = [
 export const testimonials = [
   {
     name: "Sarah M.",
-    location: "London, UK",
+    location: "Surat, India",
     text: "Absolutely stunning quality! The diamond exceeded my expectations.",
     rating: 5,
     product: "1.00CT Round Solitaire Ring"
   },
   {
-    name: "James P.",
-    location: "Manchester, UK",
+    name: "Sahil P.",
+    location: "Surat, India",
     text: "Perfect engagement ring. The customization options were amazing.",
     rating: 5,
     product: "Custom Engagement Ring"
   },
   {
-    name: "Emily R.",
-    location: "Birmingham, UK",
+    name: "Neha R.",
+    location: "Surat, India",
     text: "Beautiful jewelry and excellent customer service. Will buy again!",
     rating: 5,
     product: "Diamond Tennis Necklace"
