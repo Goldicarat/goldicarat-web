@@ -7,12 +7,15 @@ import { blogPosts, testimonials } from '../data/products'
 import { fetchProductsByType } from '../api/productService'
 import { fetchSiteSettings } from '../api/settingService'
 import { fetchCategories } from '../api/categoryService'
+import { fetchVideos } from '../api/videoService'
 
 export default function Home() {
   const [bestSellers, setBestSellers] = useState([])
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState([])
   const [siteSettings, setSiteSettings] = useState(null)
+  const [videos, setVideos] = useState([])
+  const [playingVideo, setPlayingVideo] = useState(null)
 
   useEffect(() => {
     const loadBestSellers = async () => {
@@ -50,8 +53,17 @@ export default function Home() {
         console.error('Error loading categories:', err)
       }
     }
+    const loadVideos = async () => {
+      try {
+        const data = await fetchVideos()
+        if (data?.success) setVideos(data.videos || [])
+      } catch (err) {
+        console.error('Error loading videos:', err)
+      }
+    }
     loadSiteSettings()
     loadCategories()
+    loadVideos()
   }, [])
 
   return (
@@ -186,6 +198,85 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {videos.length > 0 && (
+        <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="section-title">Featured Videos</h2>
+              <p className="text-gray-600 mt-2">Watch our latest collections and stories</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="group relative overflow-hidden rounded-xl bg-gray-900 cursor-pointer aspect-video"
+                  onClick={() => setPlayingVideo(video)}
+                >
+                  {video.thumbnail ? (
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                      <span className="text-gray-400">{video.title}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-lg">
+                      <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-gold-600 border-b-[10px] border-b-transparent ml-1"></div>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                    <h3 className="text-white font-semibold text-lg">{video.title}</h3>
+                    {video.description && (
+                      <p className="text-gray-300 text-sm mt-1 line-clamp-1">{video.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {playingVideo && (
+            <div
+              className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+              onClick={() => setPlayingVideo(null)}
+            >
+              <div
+                className="relative w-full max-w-4xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setPlayingVideo(null)}
+                  className="absolute -top-12 right-0 text-white hover:text-gray-300 text-lg font-medium flex items-center gap-2"
+                >
+                  Close <span className="text-2xl">&times;</span>
+                </button>
+                <div className="bg-black rounded-xl overflow-hidden">
+                  <video
+                    src={playingVideo.videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full aspect-video"
+                    poster={playingVideo.thumbnail}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  <div className="p-4 bg-gray-900">
+                    <h3 className="text-white font-semibold text-lg">{playingVideo.title}</h3>
+                    {playingVideo.description && (
+                      <p className="text-gray-400 mt-1">{playingVideo.description}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">

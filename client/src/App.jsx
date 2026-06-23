@@ -40,13 +40,13 @@ function App() {
             const response = await api.get(`${serverUrl}/api/setting/single-details`);
 
             if (response?.data?.success) {
-                setComingSoonView(response.data.setting.comingSoonMode);
+                setComingSoonView(response.data.setting.comingSoonMode || false);
             } else {
-                setComingSoonView(true);
+                setComingSoonView(false);
             };
         } catch (error) {
             console.error("Error fetching categories:", error);
-            setComingSoonView(true);
+            setComingSoonView(false);
         };
     };
 
