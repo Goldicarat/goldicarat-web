@@ -248,7 +248,7 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-full bg-white border-r border-gray-200 flex flex-col overflow-x-hidden">
+        <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col overflow-x-hidden">
             {/* Logo/Header */}
             <div className="p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -268,7 +268,7 @@ const Sidebar = () => {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 py-2 sm:py-4 overflow-y-auto overflow-x-hidden">
+            <div className="flex-1 py-2 sm:py-4 overflow-y-auto overflow-x-hidden sidebar-scroll">
                 <div className="space-y-1 px-1 sm:px-0">
                     {sidebarItems.map((item) => renderNavItem(item))}
                 </div>

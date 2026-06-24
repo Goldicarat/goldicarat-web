@@ -143,7 +143,10 @@ const Add = ({ token }) => {
             !formData.name ||
             !formData.description ||
             !formData.mrp ||
-            !formData.price ||
+            !formData.price14k ||
+            !formData.price18k ||
+            !formData.price22k ||
+            !formData.price24k ||
             !formData.stock ||
             !formData.category
         ) {
@@ -167,7 +170,6 @@ const Add = ({ token }) => {
             data.append("name", formData.name);
             data.append("description", formData.description);
             data.append("mrp", formData.mrp);
-            data.append("price", formData.price);
             data.append("discountedPercentage", formData.discountedPercentage);
             data.append("stock", formData.stock);
             data.append("category", formData.category);

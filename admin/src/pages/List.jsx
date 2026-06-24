@@ -324,7 +324,10 @@ const List = ({ token }) => {
             !formData.name ||
             !formData.description ||
             !formData.mrp ||
-            !formData.price ||
+            !formData.price14k ||
+            !formData.price18k ||
+            !formData.price22k ||
+            !formData.price24k ||
             !formData.category
         ) {
             toast.error("Please fill in all required fields");
