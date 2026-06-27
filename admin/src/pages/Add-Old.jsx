@@ -333,7 +333,6 @@ const Add = ({ token }) => {
                                         <option value="new_arrivals">New Arrivals</option>
                                         <option value="best_sellers">Best Sellers</option>
                                         <option value="special_offers">Special Offers</option>
-                                        <option value="promotions">Promotions</option>
                                     </select>
                                 </div>
                             </div>

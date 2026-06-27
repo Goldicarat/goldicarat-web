@@ -10,7 +10,9 @@ import { fetchCategories } from '../api/categoryService'
 import { fetchVideos } from '../api/videoService'
 
 export default function Home() {
+  const [newArrivals, setNewArrivals] = useState([])
   const [bestSellers, setBestSellers] = useState([])
+  const [specialOffers, setSpecialOffers] = useState([])
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState([])
   const [siteSettings, setSiteSettings] = useState(null)
@@ -18,22 +20,26 @@ export default function Home() {
   const [playingVideo, setPlayingVideo] = useState(null)
 
   useEffect(() => {
-    const loadBestSellers = async () => {
+    const loadProducts = async () => {
       try {
-        const data = await fetchProductsByType('best_sellers', { _perPage: 8 })
-        if (data?.success) {
-          setBestSellers(data.products || [])
-        } else {
-          setBestSellers([])
-        }
+        const [newArrivalsData, bestSellersData, specialOffersData] = await Promise.all([
+          fetchProductsByType('new_arrivals', { _perPage: 8 }),
+          fetchProductsByType('best_sellers', { _perPage: 8 }),
+          fetchProductsByType('special_offers', { _perPage: 8 }),
+        ])
+        setNewArrivals(newArrivalsData?.success ? (newArrivalsData.products || []) : [])
+        setBestSellers(bestSellersData?.success ? (bestSellersData.products || []) : [])
+        setSpecialOffers(specialOffersData?.success ? (specialOffersData.products || []) : [])
       } catch (err) {
-        console.error('Error loading best sellers:', err)
+        console.error('Error loading products:', err)
+        setNewArrivals([])
         setBestSellers([])
+        setSpecialOffers([])
       } finally {
         setLoading(false)
       }
     }
-    loadBestSellers()
+    loadProducts()
   }, [])
 
   useEffect(() => {
@@ -206,33 +212,37 @@ export default function Home() {
               <h2 className="section-title">Featured Videos</h2>
               <p className="text-gray-600 mt-2">Watch our latest collections and stories</p>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {videos.map((video) => (
                 <div
                   key={video._id}
-                  className="group relative overflow-hidden rounded-xl bg-gray-900 cursor-pointer aspect-video"
-                  onClick={() => setPlayingVideo(video)}
+                  className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
                 >
-                  {video.thumbnail ? (
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                      <span className="text-gray-400">{video.title}</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-lg">
-                      <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-gold-600 border-b-[10px] border-b-transparent ml-1"></div>
+                  <div
+                    className="relative group cursor-pointer aspect-video bg-gray-900"
+                    onClick={() => setPlayingVideo(video)}
+                  >
+                    {video.thumbnail ? (
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                        <span className="text-gray-400">{video.title}</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                      <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
+                        <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-gold-600 border-b-[10px] border-b-transparent ml-1"></div>
+                      </div>
                     </div>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                    <h3 className="text-white font-semibold text-lg">{video.title}</h3>
+                  <div className="p-5">
+                    <h3 className="font-semibold text-gray-900 text-lg truncate">{video.title}</h3>
                     {video.description && (
-                      <p className="text-gray-300 text-sm mt-1 line-clamp-1">{video.description}</p>
+                      <p className="text-gray-500 text-sm mt-2 line-clamp-2 leading-relaxed">{video.description}</p>
                     )}
                   </div>
                 </div>
@@ -246,37 +256,72 @@ export default function Home() {
               onClick={() => setPlayingVideo(null)}
             >
               <div
-                className="relative w-full max-w-4xl"
+                className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
                   onClick={() => setPlayingVideo(null)}
-                  className="absolute -top-12 right-0 text-white hover:text-gray-300 text-lg font-medium flex items-center gap-2"
+                  className="absolute top-4 right-4 z-10 text-white/80 hover:text-white bg-black/50 hover:bg-black/70 rounded-full p-2 transition-colors"
                 >
-                  Close <span className="text-2xl">&times;</span>
+                  <span className="text-xl leading-none">&times;</span>
                 </button>
-                <div className="bg-black rounded-xl overflow-hidden">
-                  <video
-                    src={playingVideo.videoUrl}
-                    controls
-                    autoPlay
-                    className="w-full aspect-video"
-                    poster={playingVideo.thumbnail}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                  <div className="p-4 bg-gray-900">
-                    <h3 className="text-white font-semibold text-lg">{playingVideo.title}</h3>
-                    {playingVideo.description && (
-                      <p className="text-gray-400 mt-1">{playingVideo.description}</p>
-                    )}
-                  </div>
+                <video
+                  src={playingVideo.videoUrl}
+                  controls
+                  autoPlay
+                  className="w-full aspect-video"
+                  poster={playingVideo.thumbnail}
+                >
+                  Your browser does not support the video tag.
+                </video>
+                <div className="p-5 bg-gray-900">
+                  <h3 className="text-white font-semibold text-lg">{playingVideo.title}</h3>
+                  {playingVideo.description && (
+                    <p className="text-gray-400 mt-2 leading-relaxed max-h-24 overflow-y-auto">{playingVideo.description}</p>
+                  )}
                 </div>
               </div>
             </div>
           )}
         </section>
       )}
+
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+            <div>
+              <h2 className="section-title">New Arrivals</h2>
+              <p className="text-gray-600 mt-2">Check out our latest additions</p>
+            </div>
+            <Link 
+              to="/shop" 
+              className="mt-4 md:mt-0 text-gold-600 hover:text-gold-700 font-medium flex items-center gap-2"
+            >
+              View All Products <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {loading
+              ? [...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100 animate-pulse">
+                    <div className="aspect-square bg-gray-200"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                ))
+              : newArrivals.length > 0
+                ? newArrivals.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))
+                : <p className="col-span-full text-center text-gray-500 py-8">No products available</p>
+            }
+          </div>
+        </div>
+      </section>
 
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -307,6 +352,43 @@ export default function Home() {
                 ))
               : bestSellers.length > 0
                 ? bestSellers.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))
+                : <p className="col-span-full text-center text-gray-500 py-8">No products available</p>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+            <div>
+              <h2 className="section-title">Special Offers</h2>
+              <p className="text-gray-600 mt-2">Exclusive deals just for you</p>
+            </div>
+            <Link 
+              to="/shop" 
+              className="mt-4 md:mt-0 text-gold-600 hover:text-gold-700 font-medium flex items-center gap-2"
+            >
+              View All Products <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {loading
+              ? [...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100 animate-pulse">
+                    <div className="aspect-square bg-gray-200"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                ))
+              : specialOffers.length > 0
+                ? specialOffers.map((product) => (
                     <ProductCard key={product._id} product={product} />
                   ))
                 : <p className="col-span-full text-center text-gray-500 py-8">No products available</p>

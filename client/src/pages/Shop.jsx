@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Filter, Grid, List, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
-import { categories, diamondShapes } from '../data/products'
+import { diamondShapes } from '../data/products'
 import { fetchProducts } from '../api/productService'
+import { fetchCategories } from '../api/categoryService'
 import { getPages } from '../api/pageService'
 import StaticFAQ from '../components/StaticFAQ'
 
@@ -20,7 +21,14 @@ export default function Shop() {
   const [totalItems, setTotalItems] = useState(0)
 
   const metals = ['All', 'Yellow Gold', 'White Gold', 'Rose Gold', 'Platinum']
+  const [shopCategories, setShopCategories] = useState([])
   const [shopFaqs, setShopFaqs] = useState([])
+
+  useEffect(() => {
+    fetchCategories().then((data) => {
+      if (data?.success) setShopCategories(data.categories || [])
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     getPages().then((data) => {
@@ -118,8 +126,8 @@ export default function Shop() {
                     />
                     <span className="text-gray-600">All Categories</span>
                   </label>
-                  {categories.map((cat) => (
-                    <label key={cat.name} className="flex items-center gap-2 cursor-pointer">
+                  {shopCategories.map((cat) => (
+                    <label key={cat._id || cat.name} className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="radio" 
                         name="category"
@@ -128,7 +136,7 @@ export default function Shop() {
                         className="accent-gold-500"
                       />
                       <span className="text-gray-600">{cat.name}</span>
-                      <span className="text-gray-400 text-sm">({cat.count})</span>
+                      <span className="text-gray-400 text-sm">({cat.productCount})</span>
                     </label>
                   ))}
                 </div>

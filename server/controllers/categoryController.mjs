@@ -1,4 +1,5 @@
 import categoryModel from "../models/categoryModel.js";
+import productModel from "../models/productModel.js";
 import { cloudinary, deleteCloudinaryImage } from "../config/cloudinary.js";
 import { createSlug } from "../config/general.js";
 import fs from "fs";
@@ -94,9 +95,22 @@ const getCategories = async (req, res) => {
             .find({ isActive: true })
             .sort({ createdAt: -1 });
 
+        const categoriesWithCount = await Promise.all(
+            categories.map(async (category) => {
+                const productCount = await productModel.countDocuments({
+                    category: { $regex: new RegExp(`^${category.name}$`, "i") },
+                    isAvailable: { $ne: false },
+                });
+                return {
+                    ...category.toObject(),
+                    productCount,
+                };
+            })
+        );
+
         return res.status(200).json({
             success: true,
-            categories,
+            categories: categoriesWithCount,
         });
     } catch (error) {
         console.error("Get categories error:", error);

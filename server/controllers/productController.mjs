@@ -180,7 +180,7 @@ const listProducts = async (req, res) => {
         };
 
         if (category) {
-            filter.category = category;
+            filter.category = { $regex: new RegExp(`^${category}$`, "i") };
         };
 
         if (shape) {
