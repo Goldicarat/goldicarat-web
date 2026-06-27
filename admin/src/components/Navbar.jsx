@@ -1,16 +1,26 @@
-import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import toast from "react-hot-toast";
 import { logo } from "../assets/images";
-import { FaUser, FaCog, FaChevronDown, FaUserShield } from "react-icons/fa";
+import { FaUser, FaCog, FaChevronDown, FaUserShield, FaSignOutAlt } from "react-icons/fa";
 import { MdNotifications, MdDashboard } from "react-icons/md";
+import { logout } from "../redux/authSlice";
 
 const Navbar = () => {
     const { user } = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const userMenuRef = useRef(null);
     const notificationRef = useRef(null);
+
+    const handleLogout = () => {
+        dispatch(logout());
+        toast.success("Logged out successfully");
+        navigate("/login");
+    };
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -52,6 +62,7 @@ const Navbar = () => {
         // { icon: FaUser, label: "Profile", path: "/profile" },
         // { icon: MdDashboard, label: "Dashboard", path: "/" },
         { icon: FaCog, label: "Settings", path: "/settings" },
+        { icon: FaSignOutAlt, label: "Logout", path: null, isLogout: true },
     ];
 
     return (
@@ -182,17 +193,31 @@ const Navbar = () => {
 
                                     {/* Menu Items */}
                                     <div className="py-1">
-                                        {userMenuItems.map((item, index) => (
-                                            <Link
-                                                key={index}
-                                                to={item.path}
-                                                onClick={() => setIsUserMenuOpen(false)}
-                                                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
-                                            >
-                                                <item.icon className="text-gray-400" />
-                                                {item.label}
-                                            </Link>
-                                        ))}
+                                        {userMenuItems.map((item, index) =>
+                                            item.isLogout ? (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => {
+                                                        setIsUserMenuOpen(false);
+                                                        handleLogout();
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
+                                                >
+                                                    <item.icon className="text-red-400" />
+                                                    {item.label}
+                                                </button>
+                                            ) : (
+                                                <Link
+                                                    key={index}
+                                                    to={item.path}
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                                                >
+                                                    <item.icon className="text-gray-400" />
+                                                    {item.label}
+                                                </Link>
+                                            )
+                                        )}
                                     </div>
                                 </div>
                             )}

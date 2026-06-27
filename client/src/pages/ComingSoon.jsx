@@ -1,95 +1,65 @@
-import { Diamond, Sparkles, Heart, Mail } from "lucide-react";
-import ComingSoonFooter from "../components/ComingSoonFooter";
+import { Wrench, Clock, Diamond, Mail, Phone, MapPin } from "lucide-react";
 import { logo } from "../assets/images";
 
 export default function ComingSoon() {
     return (
-        <>
-            <title>Goldicarat - Coming Soon</title>
-            <meta
-                name="description"
-                content="Goldicarat - Premium Lab Grown Diamond Jewelry. Experience the brilliance of ethically created, stunning diamond jewelry."
-            />
-            <meta property="og:title" content="Goldicarat - Coming Soon" />
-            <meta
-                property="og:description"
-                content="Premium Lab Grown Diamond Jewelry. Experience the brilliance of ethically created, stunning diamond jewelry."
-            />
-            <meta property="og:type" content="website" />
-            <meta name="robots" content="index, follow" />
-
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
-                <div className="flex-grow flex items-center justify-center px-4 py-12">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <div className="mb-8">
-                            <div className="inline-flex items-center justify-center w-32 h-32 mb-6 rounded-full overflow-hidden border border-yellow-400/40 shadow-[0_0_25px_rgba(255,215,0,0.3)] bg-gradient-to-br from-gray-900 to-gray-800">
-                                <img
-                                    src={logo}
-                                    alt="Goldicarat Logo"
-                                    className="object-contain"
-                                />
-                            </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
+            <div className="flex-grow flex items-center justify-center px-4 py-16">
+                <div className="max-w-2xl mx-auto text-center">
+                    <div className="mb-8">
+                        <div className="inline-flex items-center justify-center w-28 h-28 rounded-full overflow-hidden border border-yellow-400/30 shadow-[0_0_30px_rgba(255,215,0,0.2)] bg-gradient-to-br from-gray-900 to-gray-800">
+                            <img
+                                src={logo}
+                                alt="Goldicarat Logo"
+                                className="object-contain"
+                            />
                         </div>
+                    </div>
 
-                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
-                            Goldicarat
-                        </h1>
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full mb-6">
+                        <Wrench className="w-4 h-4 text-yellow-400" />
+                        <span className="text-yellow-400 text-sm font-medium">Under Maintenance</span>
+                    </div>
 
-                        <div className="flex items-center justify-center gap-2 mb-6">
-                            <Sparkles className="w-6 h-6 text-yellow-400" />
-                            <p className="text-xl md:text-2xl text-yellow-400 font-medium">
-                                Coming Soon
-                            </p>
-                            <Sparkles className="w-6 h-6 text-yellow-400" />
+                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+                        We'll Be Back Soon
+                    </h1>
+
+                    <p className="text-gray-400 text-lg leading-relaxed mb-10 max-w-lg mx-auto">
+                        Our site is currently undergoing scheduled maintenance to serve you better. 
+                        We appreciate your patience and will be back with an enhanced experience.
+                    </p>
+
+                    <div className="flex items-center justify-center gap-2 mb-12">
+                        <Clock className="w-5 h-5 text-gray-500" />
+                        <span className="text-gray-500 text-sm">Estimated downtime: A few hours</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                            <Mail className="w-5 h-5 text-yellow-400 mx-auto mb-3" />
+                            <h3 className="text-white text-sm font-semibold mb-1">Email Us</h3>
+                            <p className="text-gray-500 text-xs">support@goldicarat.com</p>
                         </div>
-
-                        <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-                            Premium Lab Grown Diamond Jewelry. Experience the brilliance of
-                            ethically created, stunning diamond jewelry crafted with precision
-                            and care.
-                        </p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                                <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Diamond className="w-6 h-6 text-yellow-400" />
-                                </div>
-                                <h3 className="text-white font-semibold mb-2">
-                                    Lab Grown Diamonds
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    Ethically created, certified quality diamonds
-                                </p>
-                            </div>
-
-                            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                                <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Sparkles className="w-6 h-6 text-yellow-400" />
-                                </div>
-                                <h3 className="text-white font-semibold mb-2">
-                                    Custom Designs
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    Create your dream jewelry piece
-                                </p>
-                            </div>
-
-                            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                                <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Heart className="w-6 h-6 text-yellow-400" />
-                                </div>
-                                <h3 className="text-white font-semibold mb-2">
-                                    Lifetime Warranty
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    Quality guaranteed forever
-                                </p>
-                            </div>
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                            <Phone className="w-5 h-5 text-yellow-400 mx-auto mb-3" />
+                            <h3 className="text-white text-sm font-semibold mb-1">Call Us</h3>
+                            <p className="text-gray-500 text-xs">+91 74340 80899</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                            <Diamond className="w-5 h-5 text-yellow-400 mx-auto mb-3" />
+                            <h3 className="text-white text-sm font-semibold mb-1">Follow Us</h3>
+                            <p className="text-gray-500 text-xs">@goldicarat</p>
                         </div>
                     </div>
                 </div>
-                <ComingSoonFooter />
             </div>
-        </>
+
+            <div className="py-6 border-t border-white/5">
+                <p className="text-center text-gray-600 text-xs">
+                    &copy; {new Date().getFullYear()} Goldicarat. All rights reserved.
+                </p>
+            </div>
+        </div>
     );
 }

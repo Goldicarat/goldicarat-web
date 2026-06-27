@@ -6,6 +6,7 @@ import Title from "../components/ui/title";
 import Input, { Label } from "../components/ui/input";
 import { serverUrl } from "../../config";
 import SkeletonLoader from "../components/SkeletonLoader";
+import ImageUpload from "../components/ImageUpload";
 import { passwordValidation } from "../utils/general.lib";
 import api from "../api/axiosInstance";
 
@@ -41,6 +42,13 @@ const Settings = ({ token }) => {
     const [shipmentBaseUrl, setShipmentBaseUrl] = useState("");
     const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
     const [defaultShippingCharge, setDefaultShippingCharge] = useState(0);
+    const [socialLinks, setSocialLinks] = useState({
+        facebook: "",
+        instagram: "",
+        twitter: "",
+        youtube: "",
+    });
+    const [isSocialSaving, setSocialSaving] = useState(false);
     const [goldPriceApiUrl, setGoldPriceApiUrl] = useState("https://www.goldapi.io/api/XAU/INR");
     const [goldPriceApiKey, setGoldPriceApiKey] = useState("");
     const [goldPricePerGram24k, setGoldPricePerGram24k] = useState(0);
@@ -76,6 +84,13 @@ const Settings = ({ token }) => {
                 if (data.setting.goldPriceApiUrl) setGoldPriceApiUrl(data.setting.goldPriceApiUrl);
                 if (data.setting.goldPriceApiKey) setGoldPriceApiKey(data.setting.goldPriceApiKey);
                 if (data.setting.goldPricePerGram24k) setGoldPricePerGram24k(data.setting.goldPricePerGram24k);
+                if (data.setting.footerLinks?.social) {
+                    const social = { facebook: "", instagram: "", twitter: "", youtube: "" };
+                    data.setting.footerLinks.social.forEach((link) => {
+                        if (social[link.platform] !== undefined) social[link.platform] = link.url;
+                    });
+                    setSocialLinks(social);
+                }
             } else {
                 toast.error(data.message || "Failed to fetch settings");
             };
@@ -198,40 +213,6 @@ const Settings = ({ token }) => {
             toast.error(error?.message);
         } finally {
             setPercentageLoading(false);
-        };
-    };
-
-    const handleComingSoonMode = async (e) => {
-        try {
-            e.preventDefault();
-
-            const payload = {
-                comingSoonMode: comingSoonMode,
-            };
-
-            setComingSoonLoading(true);
-
-            const response = await axios.put(
-                `${serverUrl}/api/setting/update-setting`,
-                payload,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
-            );
-
-            const data = response?.data;
-            if (data?.success) {
-                toast.success(data?.message);
-            } else {
-                toast.error(data?.message);
-            };
-        } catch (error) {
-            console.error("update setting Error-------->", error);
-            toast.error(error?.message);
-        } finally {
-            setComingSoonLoading(false);
         };
     };
 
@@ -457,38 +438,138 @@ const Settings = ({ token }) => {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
                 <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">Show Coming soon Mode</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Maintenance Mode</h3>
                 </div>
                 <div className="p-6">
-                    <form
-                        onSubmit={handleComingSoonMode}
-                        className="grid grid-cols-1 md:grid-cols-3 gap-6"
-                    >
-                        <div className="flex flex-col relative">
-                            <Label htmlFor="comingSoonMode">
-                                Coming Soon Mode
-                            </Label>
-                            <select
-                                name="comingSoonMode"
-                                value={comingSoonMode.toString()}
-                                onChange={(e) => setComingSoonMode(e.target.value)}
-                                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                                <option value="false">No</option>
-                                <option value="true">Yes</option>
-                            </select>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="font-medium text-gray-900">Enable Maintenance Mode</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                                When enabled, visitors will see a maintenance page instead of the website
+                            </p>
                         </div>
-
-                        <div className="md:col-span-3 flex justify-end mt-4">
+                        <div className="flex items-center gap-3">
+                            <span className={`text-sm font-medium ${comingSoonMode ? 'text-orange-500' : 'text-green-600'}`}>
+                                {comingSoonMode ? 'Active' : 'Inactive'}
+                            </span>
                             <button
-                                type="submit"
+                                type="button"
                                 disabled={isComingSoonLoading}
-                                className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                                onClick={async () => {
+                                    const newValue = !comingSoonMode;
+                                    setComingSoonMode(newValue);
+                                    setComingSoonLoading(true);
+                                    try {
+                                        const response = await axios.put(
+                                            `${serverUrl}/api/setting/update-setting`,
+                                            { comingSoonMode: newValue },
+                                            { headers: { Authorization: `Bearer ${token}` } },
+                                        );
+                                        const data = response?.data;
+                                        if (data?.success) {
+                                            toast.success(newValue ? 'Maintenance mode activated' : 'Maintenance mode deactivated');
+                                        } else {
+                                            toast.error(data?.message);
+                                            setComingSoonMode(!newValue);
+                                        }
+                                    } catch (error) {
+                                        console.error("update setting Error-------->", error);
+                                        toast.error(error?.message);
+                                        setComingSoonMode(!newValue);
+                                    } finally {
+                                        setComingSoonLoading(false);
+                                    }
+                                }}
+                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                    comingSoonMode ? 'bg-orange-500' : 'bg-gray-300'
+                                }`}
                             >
-                                {isComingSoonLoading ? "Submitting..." : "Update Mode"}
+                                <span
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ${
+                                        comingSoonMode ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
                             </button>
                         </div>
-                    </form>
+                    </div>
+                    {isComingSoonLoading && (
+                        <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Saving...
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Social Media Links */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+                <div className="p-6 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">Social Media Links</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[
+                            { key: "facebook", label: "Facebook URL", placeholder: "https://facebook.com/..." },
+                            { key: "instagram", label: "Instagram URL", placeholder: "https://instagram.com/..." },
+                            { key: "twitter", label: "X (Twitter) URL", placeholder: "https://x.com/..." },
+                            { key: "youtube", label: "YouTube URL", placeholder: "https://youtube.com/..." },
+                        ].map(({ key, label, placeholder }) => (
+                            <div key={key} className="flex flex-col">
+                                <Label htmlFor={key}>{label}</Label>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-gray-400 capitalize w-8 text-center">
+                                        {key === "twitter" ? "𝕏" : key.charAt(0).toUpperCase()}
+                                    </span>
+                                    <input
+                                        type="url"
+                                        id={key}
+                                        value={socialLinks[key]}
+                                        onChange={(e) => setSocialLinks((prev) => ({ ...prev, [key]: e.target.value }))}
+                                        placeholder={placeholder}
+                                        className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex justify-end mt-6">
+                        <button
+                            type="button"
+                            disabled={isSocialSaving}
+                            onClick={async () => {
+                                setSocialSaving(true);
+                                try {
+                                    const social = Object.entries(socialLinks).map(([platform, url], index) => ({
+                                        platform,
+                                        url: url || "#",
+                                        isActive: true,
+                                        order: index,
+                                    }));
+                                    const response = await axios.put(
+                                        `${serverUrl}/api/setting/update-footer-links`,
+                                        { social },
+                                        { headers: { Authorization: `Bearer ${token}` } },
+                                    );
+                                    if (response?.data?.success) {
+                                        toast.success("Social links updated successfully");
+                                    } else {
+                                        toast.error(response?.data?.message || "Failed to update");
+                                    }
+                                } catch (error) {
+                                    console.error("Update social links error:", error);
+                                    toast.error(error?.response?.data?.message || error.message);
+                                } finally {
+                                    setSocialSaving(false);
+                                }
+                            }}
+                            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                        >
+                            {isSocialSaving ? "Saving..." : "Save Social Links"}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -596,7 +677,7 @@ const Settings = ({ token }) => {
                 </div>
                 <div className="p-6 space-y-4">
                     {spotlight.map((item, index) => (
-                        <div key={index} className="grid grid-cols-4 gap-4 items-end">
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
                                 <label className="text-xs font-medium text-gray-500">Title</label>
                                 <input
@@ -611,18 +692,15 @@ const Settings = ({ token }) => {
                                     placeholder="Ombre Jewelry"
                                 />
                             </div>
-                            <div>
-                                <label className="text-xs font-medium text-gray-500">Image URL</label>
-                                <input
-                                    type="text"
+                            <div className="md:col-span-2">
+                                <ImageUpload
                                     value={item.image}
-                                    onChange={(e) => {
+                                    onChange={(url) => {
                                         const updated = [...spotlight];
-                                        updated[index].image = e.target.value;
+                                        updated[index].image = url;
                                         setSpotlight(updated);
                                     }}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                                    placeholder="https://..."
+                                    label="Image"
                                 />
                             </div>
                             <div>
@@ -639,17 +717,19 @@ const Settings = ({ token }) => {
                                     placeholder="/shop"
                                 />
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (spotlight.length > 1) {
-                                        setSpotlight(spotlight.filter((_, i) => i !== index));
-                                    }
-                                }}
-                                className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
-                            >
-                                Remove
-                            </button>
+                            <div className="flex items-end">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (spotlight.length > 1) {
+                                            setSpotlight(spotlight.filter((_, i) => i !== index));
+                                        }
+                                    }}
+                                    className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
+                                >
+                                    Remove
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -662,14 +742,11 @@ const Settings = ({ token }) => {
                 </div>
                 <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex flex-col">
-                            <label className="text-sm font-medium mb-1">Image URL</label>
-                            <input
-                                type="text"
+                        <div className="flex flex-col md:col-span-2">
+                            <ImageUpload
                                 value={heroBanner.image}
-                                onChange={(e) => setHeroBanner({ ...heroBanner, image: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://..."
+                                onChange={(url) => setHeroBanner({ ...heroBanner, image: url })}
+                                label="Image"
                             />
                         </div>
                         <div className="flex flex-col">
@@ -754,14 +831,11 @@ const Settings = ({ token }) => {
                                 placeholder="Shop The Collection"
                             />
                         </div>
-                        <div className="flex flex-col">
-                            <label className="text-sm font-medium mb-1">Image URL</label>
-                            <input
-                                type="text"
+                        <div className="flex flex-col md:col-span-2">
+                            <ImageUpload
                                 value={collectionBanner.image}
-                                onChange={(e) => setCollectionBanner({ ...collectionBanner, image: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://..."
+                                onChange={(url) => setCollectionBanner({ ...collectionBanner, image: url })}
+                                label="Image"
                             />
                         </div>
                         <div className="flex flex-col">

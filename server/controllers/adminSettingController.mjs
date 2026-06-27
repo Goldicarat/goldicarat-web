@@ -71,6 +71,11 @@ const getSingleSettingDetails = async (req, res) => {
                     goldPriceApiKey: "",
                     goldPricePerGram24k: 0,
                     goldPriceLastFetched: null,
+                    footerLinks: {
+                        social: [],
+                        customerService: [],
+                        bottomLinks: [],
+                    },
                 },
             });
         };

@@ -10,6 +10,7 @@ import CartDrawer from './components/CartDrawer';
 import WishlistDrawer from './components/WishlistDrawer';
 import AuthModal from './components/AuthModal';
 import ComingSoon from './pages/ComingSoon';
+import NotFound from './pages/NotFound';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -87,6 +88,7 @@ function App() {
                                             <Route path="/reset-password/:token" element={<ResetPassword />} />
                                             <Route path="/faq" element={<FAQ />} />
                                             <Route path="/page/:slug" element={<DynamicPage />} />
+                                            <Route path="*" element={<NotFound />} />
                                         </Routes>
                                     </main>
                                     <Footer />

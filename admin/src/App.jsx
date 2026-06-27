@@ -26,6 +26,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Settings from "./pages/Settings";
 import Pages from "./pages/Pages";
 import FooterSettings from "./pages/FooterSettings";
+import NotFound from "./pages/NotFound";
 
 function App() {
     const { token } = useSelector((state) => state.auth);
@@ -94,6 +95,7 @@ function App() {
                                             <Route path="/custom-designs" element={<CustomDesigns />} />
                                             <Route path="/invoice" element={<Invoice />} />
                                             <Route path="/api-docs" element={<ApiDocumentation />} />
+                                            <Route path="*" element={<NotFound />} />
                                         </Routes>
                                     </div>
                                 </div>
